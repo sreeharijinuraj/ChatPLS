@@ -32,7 +32,7 @@ class SplashScreen extends StatelessWidget {
                     style: Theme.of(context)
                         .textTheme
                         .titleLarge!
-                        .copyWith(color: Color(0xFFE6AC11), fontSize: 40)
+                        .copyWith(color: Color(0xFFE6AC11), fontSize: 40))
               ])),
             ],
           ),
