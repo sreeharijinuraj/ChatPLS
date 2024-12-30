@@ -63,16 +63,23 @@ class UploadbrochuresScreen extends StatelessWidget {
           unselectedIconTheme: IconThemeData(size: 33),
         ),
       ),
-      appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+     appBar: AppBar(
+  backgroundColor: Colors.transparent,
+  elevation: 0,
+  title: Stack(
+    children: [
+      // Centered logo and text
+      Align(
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
               'assets/images/CHATPLSLOGO2.png',
               width: 72,
               height: 72,
             ),
-            const SizedBox(width: 0),
+            //const SizedBox(width: 2),
             Text.rich(
               TextSpan(
                 children: [
@@ -95,9 +102,26 @@ class UploadbrochuresScreen extends StatelessWidget {
             ),
           ],
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
       ),
+      // Logout text aligned to the end
+      Positioned(top: 10,
+        right: 0,
+        child: TextButton(
+          onPressed: () {
+            print("Logout button clicked");
+          },
+          child: Text(
+            "Logout?",
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: Color(0xFFFF9F07), // Optional: Change the color to red
+                fontWeight: FontWeight.w300),
+          ),
+        ),
+      ),
+    ],
+  ),
+),
+
       body: Container(
         child: Stack(
           children: [
@@ -184,7 +208,7 @@ class UploadbrochuresScreen extends StatelessWidget {
                 child: TextField(
                   decoration: const InputDecoration(
                     hintText: "Search brochures or images...",
-                    hintStyle: TextStyle(color: Colors.black,fontFamily: 'Saira',),
+                    hintStyle: TextStyle(color: Colors.black,fontFamily: 'Saira',fontWeight: FontWeight.w200),
                     border: InputBorder.none,
                     prefixIcon: Icon(Icons.search,
                         color: Color(0xFFFF9F07)), // Orange icon
@@ -235,7 +259,7 @@ class UploadbrochuresScreen extends StatelessWidget {
                           style: TextStyle(
                               color: Colors.black,
                               fontSize: 15,
-                              fontFamily: 'Saira'),
+                              fontFamily: 'Saira',),
                         ),
                         subtitle: Text(
                           "Uploaded on: ${item['dateTime']}\n\n\n\n\n\n"
