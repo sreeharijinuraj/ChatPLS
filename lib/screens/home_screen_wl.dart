@@ -14,7 +14,8 @@ class HomeScreenWl extends StatelessWidget {
             Positioned(
                 top: 35,
                 left: 20,
-                child: Text.rich(TextSpan(children: [
+                child: Text.rich(
+                  TextSpan(children: [
                   TextSpan(
                       text: "Make Your \nLighting Better By \nUsing ",
                       style: Theme.of(context).textTheme.displayLarge!.copyWith(
