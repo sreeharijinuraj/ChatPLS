@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/widgets/AppBar_2_AfterLogin.dart';
 
 class UploadbrochuresScreen extends StatelessWidget {
   const UploadbrochuresScreen({super.key});
@@ -34,94 +35,36 @@ class UploadbrochuresScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: Color(0xFFF9ECC8)))),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Color(0xFFFF9F07),
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "Home",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.upload),
-              label: "Upload",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add),
-              label: "AI Chat",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle),
-              label: "Account",
-            ),
-          ],
-          unselectedItemColor: Color(0xFFF9ECC8),
-          selectedItemColor: Colors.black,
-          unselectedIconTheme: IconThemeData(size: 33),
-        ),
-      ),
-     appBar: AppBar(
-  backgroundColor: Colors.transparent,
-  elevation: 0,
-  title: Stack(
-    children: [
-      // Centered logo and text
-      Align(
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/images/CHATPLSLOGO2.png',
-              width: 72,
-              height: 72,
-            ),
-            //const SizedBox(width: 2),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: "Chat",
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge!
-                        .copyWith(color: Color(0xFFFF9F07)),
-                  ),
-                  TextSpan(
-                    text: "PLS",
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge!
-                        .copyWith(color: Color(0xFFE6AC11)),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      // Logout text aligned to the end
-      Positioned(top: 10,
-        right: 0,
-        child: TextButton(
-          onPressed: () {
-            print("Logout button clicked");
-          },
-          child: Text(
-            "Logout?",
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  color: Color(0xFFFF9F07), // Optional: Change the color to red
-                fontWeight: FontWeight.w300),
-          ),
-        ),
-      ),
-    ],
-  ),
-),
-
+      // bottomNavigationBar: Container(
+      //   decoration: BoxDecoration(
+      //       border: Border(top: BorderSide(color: Color(0xFFF9ECC8)))),
+      //   child: BottomNavigationBar(
+      //     type: BottomNavigationBarType.fixed,
+      //     backgroundColor: Color(0xFFFF9F07),
+      //     items: const <BottomNavigationBarItem>[
+      //       BottomNavigationBarItem(
+      //         icon: Icon(Icons.home),
+      //         label: "Home",
+      //       ),
+      //       BottomNavigationBarItem(
+      //         icon: Icon(Icons.upload),
+      //         label: "Upload",
+      //       ),
+      //       BottomNavigationBarItem(
+      //         icon: Icon(Icons.add),
+      //         label: "AI Chat",
+      //       ),
+      //       BottomNavigationBarItem(
+      //         icon: Icon(Icons.account_circle),
+      //         label: "Account",
+      //       ),
+      //     ],
+      //     unselectedItemColor: Color(0xFFF9ECC8),
+      //     selectedItemColor: Colors.black,
+      //     unselectedIconTheme: IconThemeData(size: 33),
+      //   ),
+      // ),
+     appBar: const AppBarAfterLogin(title: "Upload Brochures"),
       body: Container(
         child: Stack(
           children: [

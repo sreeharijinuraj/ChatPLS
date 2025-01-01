@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:myapp/screens/MainNavigationScreen.dart';
 import 'package:myapp/screens/contactAdmin_screen.dart';
 import 'package:myapp/screens/login_forAdmin_screen.dart';
 import 'package:myapp/screens/login_forStaffs_screen.dart';
 import 'package:myapp/screens/setPassword_forStaffs_screen.dart';
 //import 'package:myapp/screens/home_screen_wl.dart';
 import 'package:myapp/screens/signup_forStaffs_screen.dart';
-import 'package:myapp/screens/uploadBrochures_screen.dart';
 //import 'package:myapp/screens/splash_screen.dart';
 
 void main() {
@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
           ),
         useMaterial3: true,
       ),
-      home: const UploadbrochuresScreen(),
+      home: const MainNavigationScreen(),
     );
   }
 }
