@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/screens/MainNavigationScreen.dart';
-import 'package:myapp/screens/contactAdmin_screen.dart';
-import 'package:myapp/screens/login_forAdmin_screen.dart';
-import 'package:myapp/screens/login_forStaffs_screen.dart';
-import 'package:myapp/screens/setPassword_forStaffs_screen.dart';
+//import 'package:myapp/screens/contactAdmin_screen.dart';
+//import 'package:myapp/screens/login_forAdmin_screen.dart';
+//import 'package:myapp/screens/login_forStaffs_screen.dart';
+//import 'package:myapp/screens/setPassword_forStaffs_screen.dart';
 //import 'package:myapp/screens/home_screen_wl.dart';
-import 'package:myapp/screens/signup_forStaffs_screen.dart';
+//import 'package:myapp/screens/signup_forStaffs_screen.dart';
 //import 'package:myapp/screens/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.dumpErrorToConsole(details);
+    if (details.exception is Error) {
+      // Handle errors accordingly
+    }
+  };
 }
 
 class MyApp extends StatelessWidget {
@@ -22,7 +28,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        
         textTheme: TextTheme(
 
             //For Large Headings and other..(Text Theme)
@@ -40,18 +45,14 @@ class MyApp extends StatelessWidget {
                 fontWeight: FontWeight.w500,
                 height: 0.13),
 
-                //For Small Headings and other..(Text Theme)
+            //For Small Headings and other..(Text Theme)
 
             bodyMedium: GoogleFonts.saira(
                 color: Colors.black,
                 fontSize: 16,
                 fontWeight: FontWeight.w200,
-                height: 0.20)
-                ),
-
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0XF9ECC8)
-          ),
+                height: 0.20)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0XF9ECC8)),
         useMaterial3: true,
       ),
       home: const MainNavigationScreen(),

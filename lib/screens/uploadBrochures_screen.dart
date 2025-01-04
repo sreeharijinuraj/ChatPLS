@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:myapp/widgets/AppBar_2_AfterLogin.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class UploadbrochuresScreen extends StatefulWidget {
   const UploadbrochuresScreen({super.key});
@@ -12,19 +14,18 @@ class UploadbrochuresScreen extends StatefulWidget {
 class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
   List<Map<String, String>> uploadedItems = []; // Holds uploaded files
   String searchQuery = ""; // For search functionality
+
   void pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'], // Restrict extensions
-    );
+        type: FileType.custom, allowedExtensions: ['pdf'], withData: true);
 
     if (result != null) {
       PlatformFile file = result.files.single;
 
-      // Manually validate the file extension
-      String? fileExtension = file.extension?.toLowerCase();
-      if (fileExtension == null ||
-          !['pdf', 'jpg', 'jpeg', 'png'].contains(fileExtension)) {
+      //String? fileExtension = file.extension?.toLowerCase();
+      if (file.extension == null ||
+          !['pdf', 'jpg', 'jpeg', 'png']
+              .contains(file.extension!.toLowerCase())) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -35,7 +36,6 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
         return;
       }
 
-      // Check file size (in bytes; 30MB = 30 * 1024 * 1024)
       if (file.size > 30 * 1024 * 1024) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -46,18 +46,88 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
         return;
       }
 
-      // Assuming staff ID and timestamp are predefined for now
-      String staffId = "STAFF123";
-      String timestamp = DateTime.now().toString();
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                CircularProgressIndicator(),
+                SizedBox(height: 20),
+                Text("Wait for a while...\nFile is getting uploaded."),
+              ],
+            ),
+          );
+        },
+      );
 
-      setState(() {
-        uploadedItems.add({
-          "name": file.name,
-          "dateTime": timestamp,
-          "type": file.extension ?? "unknown",
-          "staffId": staffId,
+      try {
+        if (file.bytes == null) {
+          if (Navigator.canPop(context)) {
+            Navigator.of(context).pop();
+          }
+          // Close the loading dialog
+          throw Exception("File content is empty.");
+        }
+
+        var request = http.MultipartRequest(
+          'POST',
+          Uri.parse('http://192.168.0.108:5000/upload'),
+        );
+        request.fields['staff_id'] = '123';
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'file',
+            file.bytes!,
+            filename: file.name,
+          ),
+        );
+
+        var response =
+            await request.send().timeout(Duration(seconds: 30), onTimeout: () {
+          throw Exception("Request timed out");
         });
-      });
+
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
+// Close the loading dialog
+
+        if (response.statusCode == 200) {
+          var responseData = await response.stream.bytesToString();
+          var data = json.decode(responseData);
+
+          if (mounted) {
+            setState(() {
+              uploadedItems.add({
+                "name": data['file_name'],
+                "dateTime": data['created_at'],
+                "type": "pdf",
+                "staffId": data['staff_id'],
+              });
+            });
+          }
+          print("File upload initiated...");
+          print("Response Status Code: ${response.statusCode}");
+          print("Response Body: ${await response.stream.bytesToString()}");
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("File uploaded successfully!")),
+          );
+        } else {
+          throw Exception("Upload failed: ${response.reasonPhrase}");
+        }
+      } catch (e) {
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
+        // Close the loading dialog in case of errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
+      }
     }
   }
 
@@ -76,7 +146,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
             left: 10,
             child: Text(
               "Welcome\n{staff_name_here}",
-              style: Theme.of(context).textTheme.displayLarge!.copyWith(
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   color: Colors.black,
                   fontWeight: FontWeight.w600,
                   height: 1.5,
@@ -90,8 +160,8 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
               "Upload Brochures or Images to ChatPLS to do\n\n\n\n\n\n\nsearching and find exact match.",
               style: Theme.of(context)
                   .textTheme
-                  .bodyMedium!
-                  .copyWith(fontWeight: FontWeight.w600),
+                  .bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
 
@@ -110,7 +180,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
                 child: Center(
                   child: Text(
                     "UPLOAD BROCHURES|IMAGES",
-                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontSize: 15,
                           color: const Color(0xFFF9ECC8),
                         ),
@@ -159,12 +229,12 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
               right: 0,
               child: Text(
                 "Uploaded Brochures & Images",
-                style: Theme.of(context).textTheme.displayLarge!.copyWith(
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
                       fontSize: 25,
                     ),
               )),
 
-          //Widget to display the List of uploaded files..
+          //!Widget to display the List of uploaded files..
           Positioned(
             top: 340,
             left: 0,
