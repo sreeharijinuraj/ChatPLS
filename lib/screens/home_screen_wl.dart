@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/widgets/AppBar_1.dart';
+import 'package:footer/footer.dart';
+import 'package:footer/footer_view.dart';
 
 class HomeScreenWl extends StatelessWidget {
   const HomeScreenWl({super.key});
@@ -14,8 +16,7 @@ class HomeScreenWl extends StatelessWidget {
             Positioned(
                 top: 35,
                 left: 20,
-                child: Text.rich(
-                  TextSpan(children: [
+                child: Text.rich(TextSpan(children: [
                   TextSpan(
                       text: "Make Your \nLighting Better By \nUsing ",
                       style: Theme.of(context).textTheme.displayLarge!.copyWith(
@@ -75,7 +76,7 @@ class HomeScreenWl extends StatelessWidget {
             //THE 3 BUTTONS STARTS FROME HERE SUCH AS SIGNUP.LOGIN...ETC
 
             Positioned(
-                top: 280,
+                top: 300,
                 left: 0,
                 right: 0,
                 child: Column(
@@ -156,15 +157,15 @@ class HomeScreenWl extends StatelessWidget {
             //THE 3 BUTTONS ends HERE SUCH AS SIGNUP.LOGIN...ETC
 
             Positioned(
-              top: 475,
+              top: 520,
               left: 0,
               right: 0,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 340,
-                    height: 110,
+                    width: 350,
+                    height: 150,
                     decoration: ShapeDecoration(
                       color: Color(0xFFF9ECC8),
                       shape: RoundedRectangleBorder(
@@ -181,7 +182,7 @@ class HomeScreenWl extends StatelessWidget {
                             style: Theme.of(context)
                                 .textTheme
                                 .displayLarge!
-                                .copyWith(fontSize: 22),
+                                .copyWith(fontSize: 30),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -192,17 +193,17 @@ class HomeScreenWl extends StatelessWidget {
                             Icon(
                               Icons.login,
                               color: Color(0xFFFF9F07),
-                              size: 35,
+                              size: 45,
                             ),
                             Icon(
                               Icons.search,
                               color: Color(0xFFE6AC11),
-                              size: 35,
+                              size: 45,
                             ),
                             Icon(
                               Icons.accessibility_new,
                               color: Color(0xFFFF9F07),
-                              size: 35,
+                              size: 45,
                             ),
                           ],
                         ),
@@ -217,7 +218,7 @@ class HomeScreenWl extends StatelessWidget {
                                   .bodyMedium!
                                   .copyWith(
                                       color: Colors.black,
-                                      fontSize: 10,
+                                      fontSize: 15,
                                       fontFamily: 'Saira',
                                       fontWeight: FontWeight.w600,
                                       height: 0.52),
@@ -229,7 +230,7 @@ class HomeScreenWl extends StatelessWidget {
                                   .bodyMedium!
                                   .copyWith(
                                       color: Colors.black,
-                                      fontSize: 10,
+                                      fontSize: 15,
                                       fontFamily: 'Saira',
                                       fontWeight: FontWeight.w600,
                                       height: 0.52),
@@ -241,7 +242,7 @@ class HomeScreenWl extends StatelessWidget {
                                   .bodyMedium!
                                   .copyWith(
                                       color: Colors.black,
-                                      fontSize: 10,
+                                      fontSize: 15,
                                       fontFamily: 'Saira',
                                       fontWeight: FontWeight.w600,
                                       height: 0.52),
@@ -260,33 +261,33 @@ class HomeScreenWl extends StatelessWidget {
                                   .bodyMedium!
                                   .copyWith(
                                       color: Colors.black,
-                                      fontSize: 8,
+                                      fontSize: 10,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w400,
                                       height: 0),
                             ),
                             Text(
-                              "Search with images/\nText",
+                              "Search with Images/\nText",
                               textAlign: TextAlign.center,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium!
                                   .copyWith(
                                       color: Colors.black,
-                                      fontSize: 8,
+                                      fontSize: 10,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w400,
                                       height: 0),
                             ),
                             Text(
-                              "Get Results From\n ChatPLS",
+                              "Find Products From\n ChatPLS",
                               textAlign: TextAlign.center,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium!
                                   .copyWith(
                                       color: Colors.black,
-                                      fontSize: 8,
+                                      fontSize: 10,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w400,
                                       height: 0),
@@ -299,6 +300,24 @@ class HomeScreenWl extends StatelessWidget {
                 ],
               ),
             ),
+
+            //Footer Positioned Widget
+            Positioned(
+                child: FooterView(
+              children: <Widget>[],
+              footer: Footer(
+                backgroundColor: Color(0xFFFF9F07),
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    "© 2025,All Rights Reserved-Powered By SH",
+                    style: TextStyle(color: Color(0xFFF9ECC8)),
+                  ),
+                ),
+                padding: EdgeInsets.all(10),
+              ),
+              flex: 1,
+            ))
           ],
         ),
       ),

@@ -10,7 +10,7 @@ import 'package:myapp/screens/MainNavigationScreen.dart';
 //import 'package:myapp/screens/splash_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ChatPLS());
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.dumpErrorToConsole(details);
     if (details.exception is Error) {
@@ -19,14 +19,14 @@ void main() {
   };
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ChatPLS extends StatelessWidget {
+  const ChatPLS({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'ChatPLS',
       theme: ThemeData(
         textTheme: TextTheme(
 
@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
                 fontSize: 16,
                 fontWeight: FontWeight.w200,
                 height: 0.20)),
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0XF9ECC8)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF9ECC8)),
         useMaterial3: true,
       ),
       home: const MainNavigationScreen(),
