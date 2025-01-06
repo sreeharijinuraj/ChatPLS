@@ -56,7 +56,10 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
               children: const [
                 CircularProgressIndicator(),
                 SizedBox(height: 20),
-                Text("Wait for a while...\nFile is getting uploaded."),
+                Text(
+                  "Wait for a while...\n\n\n\n\nFile is getting uploaded.",
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           );
@@ -86,7 +89,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
         );
 
         var response =
-            await request.send().timeout(Duration(seconds: 30), onTimeout: () {
+            await request.send().timeout(Duration(seconds: 250), onTimeout: () {
           throw Exception("Request timed out");
         });
 
@@ -138,6 +141,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
     }).toList();
 
     return Scaffold(
+      backgroundColor: Color(0xFFF9ECC8),
       appBar: const AppBarAfterLogin(title: "Upload Brochures"),
       body: Stack(
         children: [

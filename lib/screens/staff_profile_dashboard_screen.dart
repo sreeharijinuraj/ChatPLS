@@ -7,6 +7,7 @@ class StaffProfileDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFF9ECC8),
       appBar: const AppBarAfterLogin(title: "Staff DashBoard"),
       // bottomNavigationBar: Container(
       //   decoration: BoxDecoration(
@@ -84,7 +85,9 @@ class StaffProfileDashboardScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        SizedBox(height: 50,width: 300,
+                        SizedBox(
+                          height: 50,
+                          width: 300,
                           child: TextField(
                             decoration: InputDecoration(
                                 border: OutlineInputBorder(
@@ -95,7 +98,9 @@ class StaffProfileDashboardScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        SizedBox(height: 50,width: 300,
+                        SizedBox(
+                          height: 50,
+                          width: 300,
                           child: TextField(
                             decoration: InputDecoration(
                                 border: OutlineInputBorder(

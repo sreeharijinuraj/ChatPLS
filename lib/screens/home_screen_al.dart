@@ -7,6 +7,7 @@ class HomeScreenAl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Color(0xFFF9ECC8),
         appBar: const AppBarAfterLogin(title: "Home-AI"),
         body: Stack(
           children: [
@@ -53,8 +54,8 @@ class HomeScreenAl extends StatelessWidget {
                           color: Color.fromARGB(255, 255, 249, 239),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        padding: EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 15),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                         child: Row(
                           children: [
                             Image.asset(
@@ -68,7 +69,8 @@ class HomeScreenAl extends StatelessWidget {
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium!
-                                  .copyWith(fontSize: 25, color: Color(0xFFE6AC11)),
+                                  .copyWith(
+                                      fontSize: 25, color: Color(0xFFE6AC11)),
                             ),
                           ],
                         ),
@@ -85,10 +87,11 @@ class HomeScreenAl extends StatelessWidget {
                           color: Color(0xFFE6AC11),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        padding: EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 15),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                         child: Text(
-                          "I'm Your AI Assistant..!",textAlign: TextAlign.center,
+                          "I'm Your AI Assistant..!",
+                          textAlign: TextAlign.center,
                           style: Theme.of(context)
                               .textTheme
                               .bodyMedium!

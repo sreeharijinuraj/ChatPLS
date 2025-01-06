@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 
-class AppbarOfchatscreen extends StatelessWidget
+class AppbarOfChatScreen extends StatelessWidget
     implements PreferredSizeWidget {
-  const AppbarOfchatscreen({super.key});
+  const AppbarOfChatScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: const Color(0xFFF9ECC8),
       elevation: 0,
-      leading: IconButton(
-        onPressed: () {
-          // Add functionality for menu button
+      leading: Builder(
+        builder: (BuildContext context) {
+          return IconButton(
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+            icon: const Icon(Icons.menu, color: Color(0xFFFF9F07)),
+          );
         },
-        icon: const Icon(Icons.menu, color: Color(0xFFFF9F07)),
       ),
       centerTitle: true,
       title: Row(
@@ -24,7 +28,7 @@ class AppbarOfchatscreen extends StatelessWidget
             width: 60,
             height: 60,
           ),
-          const SizedBox(width: 8), // Add spacing between logo and text
+          const SizedBox(width: 8),
           Text.rich(
             TextSpan(
               children: [
@@ -54,11 +58,32 @@ class AppbarOfchatscreen extends StatelessWidget
           },
           icon: const Icon(Icons.add, color: Color(0xFFFF9F07)),
         ),
-        IconButton(
-          onPressed: () {
-            // Add functionality for 3-dot menu icon
-          },
+        PopupMenuButton(
           icon: const Icon(Icons.more_vert, color: Color(0xFFFF9F07)),
+          color: const Color(0xFFFF9F07),
+          itemBuilder: (BuildContext context) => [
+            PopupMenuItem(
+              value: 'about',
+              child: Row(
+                children: [
+                  const Icon(Icons.info, color: Color(0xFFF9ECC8)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'About',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: const Color(0xFFF9ECC8)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          onSelected: (value) {
+            if (value == 'about') {
+              Scaffold.of(context).openEndDrawer();
+            }
+          },
         ),
       ],
     );
