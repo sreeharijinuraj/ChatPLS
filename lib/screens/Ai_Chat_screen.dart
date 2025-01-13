@@ -1,9 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:myapp/widgets/AppBar_OfChatScreen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class AiChatScreen extends StatelessWidget {
+class AiChatScreen extends StatefulWidget {
   const AiChatScreen({super.key});
+
+  @override
+  State<AiChatScreen> createState() => _AiChatScreenState();
+}
+
+class _AiChatScreenState extends State<AiChatScreen> {
+  List<Map<String, dynamic>> chatMessages = [];
+  bool isLoading = false;
+
+  Future<void> sendQuery(String query) async {
+    final url = Uri.parse('http://192.168.0.110:5000/search');
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'query': query}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final results = data['results'] as List;
+
+        if (results.isEmpty) {
+          setState(() {
+            chatMessages.add({
+              'isSender': false,
+              'text': 'No matching results found in the database.'
+            });
+          });
+        } else {
+          for (var result in results) {
+            final content = result['content'];
+            final fileName = result['file_name'];
+            final similarity = result['similarity'];
+
+            setState(() {
+              chatMessages.add({
+                'isSender': false,
+                'text':
+                    'Match: $fileName\n\nContent: $content\n\nSimilarity: $similarity',
+              });
+            });
+          }
+        }
+      } else {
+        setState(() {
+          chatMessages.add({'isSender': false, 'text': 'Error from server.'});
+        });
+      }
+    } catch (e) {
+      print('Error: $e');
+      setState(() {
+        chatMessages
+            .add({'isSender': false, 'text': 'Failed to fetch response.'});
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,193 +85,91 @@ class AiChatScreen extends StatelessWidget {
               decoration: const BoxDecoration(
                 color: Color(0xFFFF9F07),
               ),
-              child: Column(children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9ECC8),
-                    borderRadius: BorderRadius.circular(30),
-                    border:
-                        Border.all(color: const Color(0xFFFF9F07), width: 2),
-                  ),
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      hintStyle: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          color: Colors.black,
-                          fontSize: 13,
-                          fontFamily: 'Saira',
-                          fontWeight: FontWeight.w100,
-                          height: 4.10),
-                      hintText: "Search",
-                      border: InputBorder.none,
-                      prefixIcon: Icon(Icons.search, color: Color(0xFFFF9F07)),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9ECC8),
+                      borderRadius: BorderRadius.circular(30),
+                      border:
+                          Border.all(color: const Color(0xFFFF9F07), width: 2),
                     ),
-                    onChanged: (value) {},
-                  ),
-                ),
-                Row(
-                  children: [
-                    Image.asset(
-                      'assets/images/CHATPLSLOGO2.png',
-                      width: 72,
-                      height: 72,
-                      color: Color(0xFFF9ECC8),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        hintStyle: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: Colors.black,
+                            fontSize: 13,
+                            fontFamily: 'Saira',
+                            fontWeight: FontWeight.w100,
+                            height: 4.10),
+                        hintText: "Search",
+                        border: InputBorder.none,
+                        prefixIcon:
+                            Icon(Icons.search, color: Color(0xFFFF9F07)),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                      onChanged: (value) {},
                     ),
-                    Text("ChatPLS",
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(color: Color(0xFFF9ECC8)))
-                  ],
-                ),
-              ]),
+                  ),
+                  Row(
+                    children: [
+                      Image.asset(
+                        'assets/images/CHATPLSLOGO2.png',
+                        width: 72,
+                        height: 72,
+                        color: const Color(0xFFF9ECC8),
+                      ),
+                      Text("ChatPLS",
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(color: const Color(0xFFF9ECC8))),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(
-              height: 5,
-            ),
-            ListTile(
-              title: const Text(
+            const ListTile(
+              title: Text(
                 'Chat - 1',
                 style: TextStyle(
                   color: Color(0xFFF9ECC8),
                   fontSize: 18,
                 ),
               ),
-              onTap: () {
-                // Handle Chat - 1 navigation
-              },
-            ),
-            ListTile(
-              title: const Text(
-                'Chat - 2',
-                style: TextStyle(
-                  color: Color(0xFFF9ECC8),
-                  fontSize: 18,
-                ),
-              ),
-              onTap: () {
-                // Handle Chat - 2 navigation
-              },
-            ),
-            ListTile(
-              title: const Text(
-                'Chat - 3',
-                style: TextStyle(
-                  color: Color(0xFFF9ECC8),
-                  fontSize: 18,
-                ),
-              ),
-              onTap: () {
-                // Handle Chat - 3 navigation
-              },
-            ),
-            ListTile(
-              title: const Text(
-                'Chat - 4',
-                style: TextStyle(
-                  color: Color(0xFFF9ECC8),
-                  fontSize: 18,
-                ),
-              ),
-              onTap: () {
-                // Handle Chat - 4 navigation
-              },
             ),
           ],
         ),
       ),
-      endDrawer: Drawer(
-          backgroundColor: const Color(0xFFFF9F07),
-          child: Stack(
-            children: [
-              Positioned(
-                  top: 60,
-                  left: 0,
-                  right: 0,
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/images/CHATPLSLOGO2.png',
-                        width: 150,
-                        height: 150,
-                        color: Color(0xFFF9ECC8),
-                      ),
-                      Text(
-                        "ChatPLS",
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(color: Color(0xFFF9ECC8), fontSize: 25),
-                      )
-                    ],
-                  )),
-              Positioned(
-                top: 260,
-                left: 10,
-                child: Text(
-                  "Model Info",
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(color: Color(0xFFF9ECC8), fontSize: 18),
-                ),
-              ),
-              Positioned(
-                  top: 280,
-                  left: 10,
-                  child: Column(
-                    children: [
-                      Text(
-                        "\n\nVersion 1.00",
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Color(0xFFF9ECC8),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400),
-                      ),
-                    ],
-                  )),
-            ],
-          )),
       body: Column(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: <Widget>[
-                  BubbleNormal(
-                    text: "Chat Message -1 (From ChatPLS)",
-                    isSender: false,
-                    color: const Color(0xFFFF9F07),
-                    tail: false,
-                    textStyle: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 20, color: const Color(0xFFF9ECC8)),
-                  ),
-                  BubbleNormal(
-                    text: "Chat Message -2 (From Sender)",
-                    tail: false,
-                    color: const Color(0xFFE6AC11),
-                    textStyle: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 20, color: const Color(0xFFF9ECC8)),
-                  ),
-                  BubbleNormalImage(
-                    id: 'id001',
-                    image: Image.asset(
-                      'assets/images/CHATPLSLOGO2.png',
-                      width: 72,
-                      height: 72,
-                    ),
-                    color: const Color(0xFFE6AC11),
-                    tail: false,
-                  ),
-                ],
-              ),
+            child: ListView.builder(
+              itemCount: chatMessages.length,
+              itemBuilder: (context, index) {
+                final message = chatMessages[index];
+                return BubbleNormal(
+                  text: message['text'],
+                  isSender: message['isSender'],
+                  color: message['isSender']
+                      ? const Color(0xFFFF9F07)
+                      : const Color(0xFFF9ECC8),
+                  tail: false,
+                  textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 20,
+                      color: message['isSender']
+                          ? const Color(0xFFF9ECC8)
+                          : const Color(0xFF000000)),
+                );
+              },
             ),
           ),
+          if (isLoading)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
+            ),
           Container(
             decoration: BoxDecoration(
               border: Border.all(color: const Color(0xFFFF9F07), width: 1),
@@ -223,7 +187,12 @@ class AiChatScreen extends StatelessWidget {
                 fontWeight: FontWeight.w500,
               ),
               messageBarColor: const Color(0xFFF9ECC8),
-              onSend: (_) {},
+              onSend: (message) async {
+                setState(() {
+                  chatMessages.add({'isSender': true, 'text': message});
+                });
+                await sendQuery(message);
+              },
               actions: [
                 InkWell(
                   child: const Icon(

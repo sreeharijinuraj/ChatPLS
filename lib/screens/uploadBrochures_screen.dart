@@ -57,7 +57,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
                 CircularProgressIndicator(),
                 SizedBox(height: 20),
                 Text(
-                  "Wait for a while...\n\n\n\n\nFile is getting uploaded.",
+                  "Wait for a while...\n\n\n\n\n\n File is getting uploaded.",
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -89,7 +89,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
         );
 
         var response =
-            await request.send().timeout(Duration(seconds: 250), onTimeout: () {
+            await request.send().timeout(Duration(seconds: 850), onTimeout: () {
           throw Exception("Request timed out");
         });
 

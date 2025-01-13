@@ -7,103 +7,232 @@ class HomeScreenAl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Color(0xFFF9ECC8),
-        appBar: const AppBarAfterLogin(title: "Home-AI"),
-        body: Stack(
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+      resizeToAvoidBottomInset: false,
+      backgroundColor: const Color(0xFFF9ECC8),
+      appBar: const AppBarAfterLogin(title: "Home-AI"),
+      body: Stack(
+        children: [
+          Positioned(
+            top: 10,
+            left: 15,
+            child: Column(
               children: [
-                Container(
-                  child: Center(
-                    child: Image.asset(
-                      'assets/images/CHATPLSLOGO2.png',
-                      width: 263,
-                      height: 229,
-                    ),
-                  ),
-                ),
                 Text.rich(TextSpan(children: [
                   TextSpan(
-                      text: "Chat",
-                      style: Theme.of(context)
-                          .textTheme
-                          .displayLarge!
-                          .copyWith(color: Color(0xFFFF9F07), fontSize: 40)),
+                      text: "Welcome",
+                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                          color: const Color(0xFFFF9F07),
+                          fontWeight: FontWeight.w500,
+                          height: 1.5,
+                          fontSize: 26)),
                   TextSpan(
-                      text: "PLS",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge!
-                          .copyWith(color: Color(0xFFE6AC11), fontSize: 40))
+                      text: ", {staff_name_here}",
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: const Color(0xFFE6AC11),
+                          fontWeight: FontWeight.w300,
+                          height: 1.5,
+                          fontSize: 26))
                 ])),
               ],
             ),
-            Positioned(
-              top: 290,
-              left: 0,
-              right: 0,
-              child: Column(
-                children: [
-                  // "Hey There!.." with rounded orange container
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+          ),
+          Positioned(
+            top: 50,
+            left: 15,
+            child: Text(
+              "How Can I Help You Right Now ?..",
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: const Color(0xFFFF9F07),
+                  fontWeight: FontWeight.w100,
+                  height: 1.5,
+                  fontSize: 17),
+            ),
+          ),
+          // The 3 Grids start from here
+          Positioned(
+            top: 90,
+            left: 15,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 150,
+                  height: 360,
+                  decoration: BoxDecoration(
+                      color: const Color(0xFFFF9F07),
+                      borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(15),
+                          topRight: Radius.circular(15),
+                          bottomLeft: Radius.circular(55),
+                          bottomRight: Radius.circular(15))),
+                  padding: const EdgeInsets.all(30),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        decoration: BoxDecoration(
-                          color: Color.fromARGB(255, 255, 249, 239),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              'assets/images/CHATPLSLOGO2.png',
-                              width: 60,
-                              height: 60,
-                            ),
-                            SizedBox(width: 10),
-                            Text(
-                              "Hey There!..",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      fontSize: 25, color: Color(0xFFE6AC11)),
-                            ),
-                          ],
+                        height: 50,
+                        width: 50,
+                        child: const Icon(
+                          color: Color(0xFFF9ECC8),
+                          Icons.text_fields,
+                          size: 50,
                         ),
                       ),
+                      Text.rich(TextSpan(children: [
+                        TextSpan(
+                            text: "Chat With",
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(
+                                    color: const Color(0xFFF9ECC8),
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.2,
+                                    fontSize: 26)),
+                        TextSpan(
+                            text: "\nChatPLS",
+                            style: Theme.of(context)
+                                .textTheme
+                                .displayLarge
+                                ?.copyWith(
+                                    color: const Color(0xFFF9ECC8),
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.2,
+                                    fontSize: 22))
+                      ]))
                     ],
                   ),
-                  SizedBox(height: 10),
-                  // "Hello Chatpls" with rounded container
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Color(0xFFE6AC11),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                        child: Text(
-                          "I'm Your AI Assistant..!",
-                          textAlign: TextAlign.center,
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  children: [
+                    Container(
+                      width: 200,
+                      height: 180,
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFFF9F07),
+                          borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(15),
+                              topRight: Radius.circular(15),
+                              bottomLeft: Radius.circular(15),
+                              bottomRight: Radius.circular(55))),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 30),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            color: Colors.deepPurple,
+                            Icons.image,
+                            size: 40,
+                          ),
+                          Text(
+                            "Search With Images",
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w300,
+                                    height: 1.2,
+                                    fontSize: 20),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Container(
+                      width: 200,
+                      height: 180,
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFFF9F07),
+                          borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(15),
+                              topRight: Radius.circular(15),
+                              bottomLeft: Radius.circular(15),
+                              bottomRight: Radius.circular(55))),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 30),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            color: Colors.green,
+                            Icons.camera,
+                            size: 40,
+                          ),
+                          Text(
+                            "Search Using Camera",
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w300,
+                                    height: 1.2,
+                                    fontSize: 20),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+          // Recent Searches Section
+          Positioned(
+            top: 480, // Adjust as per your layout
+            left: 0,
+            right: 0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Recent Searches",
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: const Color(0xFFFF9F07),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  height: 150, // Adjust height as needed
+                  child: ListView.builder(
+                    scrollDirection: Axis.vertical,
+                    itemCount: 5, // Sample data count
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 10),
+                        tileColor: const Color(0xFFE6AC11),
+                        leading: const Icon(Icons.history, color: Colors.white),
+                        title: Text(
+                          "Sample Search $index",
                           style: Theme.of(context)
                               .textTheme
-                              .bodyMedium!
-                              .copyWith(fontSize: 16, color: Colors.white),
+                              .bodyLarge
+                              ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16),
                         ),
-                      ),
-                    ],
+                        subtitle: Text(
+                          "Details about search $index",
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: Colors.white70, fontSize: 12),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios,
+                            color: Colors.white, size: 16),
+                      );
+                    },
                   ),
-                ],
-              ),
-            )
-          ],
-        ));
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
