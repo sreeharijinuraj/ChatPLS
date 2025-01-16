@@ -149,18 +149,67 @@ class _AiChatScreenState extends State<AiChatScreen> {
               itemCount: chatMessages.length,
               itemBuilder: (context, index) {
                 final message = chatMessages[index];
-                return BubbleNormal(
-                  text: message['text'],
-                  isSender: message['isSender'],
-                  color: message['isSender']
-                      ? const Color(0xFFFF9F07)
-                      : const Color(0xFFF9ECC8),
-                  tail: false,
-                  textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 20,
-                      color: message['isSender']
-                          ? const Color(0xFFF9ECC8)
-                          : const Color(0xFF000000)),
+                return Align(
+                  alignment: message['isSender']
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                    child: Row(
+                      mainAxisAlignment: message['isSender']
+                          ? MainAxisAlignment.end
+                          : MainAxisAlignment.start,
+                      children: [
+                        // Add the icon for response messages
+                        if (!message['isSender'])
+                          Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: Image.asset(
+                              'assets/images/CHATPLSLOGO2.png',
+                              width: 30,
+                              height: 30,
+                              // color: const Color(0xFFF9ECC8),
+                            ),
+                          ),
+                        // Message container
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 22, horizontal: 10),
+                            decoration: BoxDecoration(
+                              color: message['isSender']
+                                  ? const Color(
+                                      0xFFFF9F07) // Sender's message color
+                                  : const Color(
+                                      0xFFF9ECC8), // Receiver's message color
+                              borderRadius:
+                                  BorderRadius.circular(20), // Rounded corners
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 5,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              message['text'],
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: message['isSender']
+                                    ? const Color(
+                                        0xFFF9ECC8) // Text color for sender
+                                    : const Color(
+                                        0xFF000000), // Text color for receiver
+                                fontFamily: 'Saira',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               },
             ),

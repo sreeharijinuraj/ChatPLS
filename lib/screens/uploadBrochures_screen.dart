@@ -77,7 +77,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
 
         var request = http.MultipartRequest(
           'POST',
-          Uri.parse('http://192.168.0.108:5000/upload'),
+          Uri.parse('http://192.168.0.110:5000/upload'),
         );
         request.fields['staff_id'] = '123';
         request.files.add(
@@ -88,8 +88,8 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
           ),
         );
 
-        var response =
-            await request.send().timeout(Duration(seconds: 850), onTimeout: () {
+        var response = await request.send().timeout(Duration(seconds: 1500),
+            onTimeout: () {
           throw Exception("Request timed out");
         });
 
