@@ -48,7 +48,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               chatMessages.add({
                 'isSender': false,
                 'text':
-                    'Match: $fileName\n\nContent: $content\n\nSimilarity: $similarity',
+                    'Match: $fileName\n\n\n\n\nContent: $content\n\n\n\n\n\n\n\n\n\n\nSimilarity: $similarity\n\n\n\n\n\n',
               });
             });
           }
@@ -169,11 +169,10 @@ class _AiChatScreenState extends State<AiChatScreen> {
                               'assets/images/CHATPLSLOGO2.png',
                               width: 30,
                               height: 30,
-                              // color: const Color(0xFFF9ECC8),
                             ),
                           ),
                         // Message container
-                        Expanded(
+                        Flexible(
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 vertical: 22, horizontal: 10),
@@ -193,18 +192,43 @@ class _AiChatScreenState extends State<AiChatScreen> {
                                 ),
                               ],
                             ),
-                            child: Text(
-                              message['text'],
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: message['isSender']
-                                    ? const Color(
-                                        0xFFF9ECC8) // Text color for sender
-                                    : const Color(
-                                        0xFF000000), // Text color for receiver
-                                fontFamily: 'Saira',
-                              ),
-                            ),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    textAlign: TextAlign.start,
+                                    softWrap: true,
+                                    maxLines: null,
+                                    message['text'],
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: message['isSender']
+                                          ? const Color(
+                                              0xFFF9ECC8) // Text color for sender
+                                          : const Color(
+                                              0xFF000000), // Text color for receiver
+                                      fontFamily: 'Saira',
+                                    ),
+                                  ),
+                                  if (!message['isSender'] &&
+                                      message['text'].contains('Match:')) ...[
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      "Certainly! Here's the result From ChatPLS:\n\n\n",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      message['text'].replaceAll("\n\n", ""),
+                                      style: const TextStyle(
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                  ],
+                                ]),
                           ),
                         ),
                       ],
