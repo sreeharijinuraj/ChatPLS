@@ -3,6 +3,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:myapp/widgets/AppBar_2_AfterLogin.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:csv/csv.dart';
+import 'package:http_parser/http_parser.dart';
 
 class UploadbrochuresScreen extends StatefulWidget {
   const UploadbrochuresScreen({super.key});
@@ -17,19 +19,21 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
 
   void pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom, allowedExtensions: ['pdf'], withData: true);
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'csv'],
+        withData: true);
 
     if (result != null) {
       PlatformFile file = result.files.single;
 
       //String? fileExtension = file.extension?.toLowerCase();
+      // Check for valid extensions
       if (file.extension == null ||
-          !['pdf', 'jpg', 'jpeg', 'png']
-              .contains(file.extension!.toLowerCase())) {
+          !['pdf', 'csv'].contains(file.extension!.toLowerCase())) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                "Invalid file type. Only PDF, JPG, JPEG & PNG are allowed."),
+            content: const Text(
+                "Invalid file type. Only PDF and CSV files are allowed."),
             backgroundColor: Colors.red,
           ),
         );
@@ -67,66 +71,61 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
       );
 
       try {
-        if (file.bytes == null) {
-          if (Navigator.canPop(context)) {
-            Navigator.of(context).pop();
-          }
-          // Close the loading dialog
-          throw Exception("File content is empty.");
-        }
+        // Determine the endpoint based on file type
+        String endpoint = file.extension!.toLowerCase() == 'csv'
+            ? 'http://192.168.0.110:5000/upload_csv' // Endpoint for CSV
+            : 'http://192.168.0.110:5000/upload'; // Endpoint for PDFs
 
+        // Prepare the HTTP request
         var request = http.MultipartRequest(
           'POST',
-          Uri.parse('http://192.168.0.110:5000/upload'),
+          Uri.parse(endpoint),
         );
-        request.fields['staff_id'] = '123';
+        request.fields['staff_id'] = '123'; // Pass the staff ID
         request.files.add(
           http.MultipartFile.fromBytes(
-            'file',
+            'file', // Key for the file in the backend
             file.bytes!,
             filename: file.name,
+            contentType: MediaType(
+              file.extension!.toLowerCase() == 'csv' ? 'text' : 'application',
+              file.extension!,
+            ),
           ),
         );
 
-        var response = await request.send().timeout(Duration(seconds: 1500),
-            onTimeout: () {
-          throw Exception("Request timed out");
-        });
+        // Send the request
+        var response = await request.send();
 
-        if (Navigator.canPop(context)) {
-          Navigator.of(context).pop();
-        }
-// Close the loading dialog
+        if (Navigator.canPop(context))
+          Navigator.of(context).pop(); // Close the dialog
 
         if (response.statusCode == 200) {
+          // Parse the response
           var responseData = await response.stream.bytesToString();
           var data = json.decode(responseData);
 
-          if (mounted) {
-            setState(() {
-              uploadedItems.add({
-                "name": data['file_name'],
-                "dateTime": data['created_at'],
-                "type": "pdf",
-                "staffId": data['staff_id'],
-              });
+          // Update the UI with the uploaded file information
+          setState(() {
+            uploadedItems.add({
+              "name": data['file_name'],
+              "dateTime": data['created_at'],
+              "type": file.extension!.toLowerCase(),
+              "staffId": data['staff_id'],
             });
-          }
-          print("File upload initiated...");
-          print("Response Status Code: ${response.statusCode}");
-          print("Response Body: ${await response.stream.bytesToString()}");
+          });
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("File uploaded successfully!")),
+            SnackBar(
+                content: Text(
+                    "${file.extension!.toUpperCase()} file uploaded successfully!")),
           );
         } else {
           throw Exception("Upload failed: ${response.reasonPhrase}");
         }
       } catch (e) {
-        if (Navigator.canPop(context)) {
-          Navigator.of(context).pop();
-        }
-        // Close the loading dialog in case of errors
+        if (Navigator.canPop(context))
+          Navigator.of(context).pop(); // Close the dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error: $e")),
         );
