@@ -25,14 +25,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   // Handle bottom navigation bar item taps
   void _onItemTapped(int index) {
-      print("Selected Index: $index");
+    print("Selected Index: $index");
     setState(() {
       _selectedIndex = index;
     });
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +53,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
-            label: "Account",
+            label: "Accounts",
           ),
         ],
         currentIndex: _selectedIndex,
