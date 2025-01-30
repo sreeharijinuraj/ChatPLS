@@ -12,12 +12,21 @@ class StaffProfileDashboardScreen extends StatefulWidget {
 class _StaffProfileDashboardScreenState
     extends State<StaffProfileDashboardScreen> {
   List<Map<String, String>> staffList = [];
+  int? editIndex; // Class-level variable to track editing index
 
-  void _showAddStaffDialog() {
+  void _showAddStaffDialog({int? editIndex}) {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController emailController = TextEditingController();
     final TextEditingController dobController = TextEditingController();
     String? selectedGender;
+
+    if (editIndex != null) {
+      final staff = staffList[editIndex];
+      nameController.text = staff["name"]!;
+      selectedGender = staff["gender"]!;
+      dobController.text = staff["dob"]!;
+      emailController.text = staff["email"]!;
+    }
 
     showDialog(
       context: context,
@@ -25,7 +34,7 @@ class _StaffProfileDashboardScreenState
         return AlertDialog(
           backgroundColor: Color(0xFFF9ECC8),
           title: Text(
-            "Add Staffs To CHATPLS",
+            editIndex == null ? "Add Staff" : "Edit Staff",
             style: Theme.of(context)
                 .textTheme
                 .displayLarge
@@ -41,6 +50,7 @@ class _StaffProfileDashboardScreenState
                 ),
                 DropdownButtonFormField<String>(
                   decoration: InputDecoration(labelText: "Gender"),
+                  value: selectedGender,
                   items: ["Male", "Female"].map((String gender) {
                     return DropdownMenuItem<String>(
                       value: gender,
@@ -95,18 +105,30 @@ class _StaffProfileDashboardScreenState
                             dobController.text.isNotEmpty &&
                             emailController.text.isNotEmpty) {
                           setState(() {
-                            staffList.add({
-                              "name": nameController.text,
-                              "gender": selectedGender!,
-                              "dob": dobController.text,
-                              "email": emailController.text,
-                              "staff_id": "staff123", // Placeholder
-                            });
+                            if (editIndex == null) {
+                              staffList.add({
+                                "name": nameController.text,
+                                "gender": selectedGender!,
+                                "dob": dobController.text,
+                                "email": emailController.text,
+                                "staff_id":
+                                    "staff${staffList.length + 1}", // Unique ID
+                              });
+                            } else {
+                              staffList[editIndex] = {
+                                "name": nameController.text,
+                                "gender": selectedGender!,
+                                "dob": dobController.text,
+                                "email": emailController.text,
+                                "staff_id": staffList[editIndex]
+                                    ["staff_id"]!, // Keep same ID
+                              };
+                            }
                           });
                           Navigator.of(context).pop();
                         }
                       },
-                      child: Text("Create"),
+                      child: Text(editIndex == null ? "Create" : "Update"),
                     ),
                   ],
                 )
@@ -232,7 +254,7 @@ class _StaffProfileDashboardScreenState
             child: Column(
               children: [
                 TextButton(
-                  onPressed: _showAddStaffDialog,
+                  onPressed: () => _showAddStaffDialog(),
                   child: Container(
                     width: 150,
                     height: 28,
@@ -264,15 +286,31 @@ class _StaffProfileDashboardScreenState
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("\nStaff ID: ${staff["staff_id"]}"),
+                            Text(
+                              "\n\nStaff ID: ${staff["staff_id"]}",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFF9ECC8),
+                                  fontSize: 12),
+                            ),
                             Text("\n\n\n\nGender: ${staff["gender"]}\n\n\n"),
                             Text("\n\n\nDOB: ${staff["dob"]}\n"),
                             Text("\n\n\n\nEmail: ${staff["email"]}\n\n\n"),
                           ],
                         ),
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteStaff(index),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () =>
+                                  _showAddStaffDialog(editIndex: index),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteStaff(index),
+                            ),
+                          ],
                         ),
                       );
                     },
