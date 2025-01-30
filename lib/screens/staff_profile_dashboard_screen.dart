@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/widgets/AppBar_2_AfterLogin.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StaffProfileDashboardScreen extends StatefulWidget {
   const StaffProfileDashboardScreen({super.key});
@@ -11,10 +12,48 @@ class StaffProfileDashboardScreen extends StatefulWidget {
 
 class _StaffProfileDashboardScreenState
     extends State<StaffProfileDashboardScreen> {
-  List<Map<String, String>> staffList = [];
-  int? editIndex; // Class-level variable to track editing index
+  final SupabaseClient supabase = Supabase.instance.client;
+  List<Map<String, dynamic>> staffList = [];
 
-  void _showAddStaffDialog({int? editIndex}) {
+  @override
+  void initState() {
+    super.initState();
+    _fetchStaffs();
+  }
+
+  Future<void> _fetchStaffs() async {
+    final response = await supabase.from('staffs').select();
+    setState(() {
+      staffList = response;
+    });
+  }
+
+  Future<String> _generateStaffId() async {
+    // Fetch the last staff_id from the staffs table
+    final response = await supabase
+        .from('staffs')
+        .select('staff_id')
+        .order('staff_id', ascending: false)
+        .limit(1);
+
+    String lastStaffId = "STAFFPLS000"; // Default starting ID
+
+    if (response.isNotEmpty && response[0]["staff_id"] != null) {
+      lastStaffId = response[0]["staff_id"];
+    }
+
+    // Extract the numeric part of the last staff_id
+    final numericPart =
+        int.tryParse(lastStaffId.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+
+    // Increment the numeric part and format it back
+    final nextNumericPart = numericPart + 1;
+    final nextStaffId = "STAFFPLS${nextNumericPart.toString().padLeft(3, '0')}";
+
+    return nextStaffId;
+  }
+
+  Future<void> _addOrUpdateStaff({int? editIndex}) async {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController emailController = TextEditingController();
     final TextEditingController dobController = TextEditingController();
@@ -22,10 +61,10 @@ class _StaffProfileDashboardScreenState
 
     if (editIndex != null) {
       final staff = staffList[editIndex];
-      nameController.text = staff["name"]!;
-      selectedGender = staff["gender"]!;
-      dobController.text = staff["dob"]!;
-      emailController.text = staff["email"]!;
+      nameController.text = staff["name"];
+      selectedGender = staff["gender"];
+      dobController.text = staff["dob"];
+      emailController.text = staff["email"];
     }
 
     showDialog(
@@ -58,14 +97,12 @@ class _StaffProfileDashboardScreenState
                     );
                   }).toList(),
                   onChanged: (value) {
-                    setState(() {
-                      selectedGender = value;
-                    });
+                    selectedGender = value;
                   },
                 ),
                 TextField(
                   controller: dobController,
-                  readOnly: true, // Prevent manual input
+                  readOnly: true,
                   decoration: InputDecoration(
                     labelText: "Date of Birth",
                     suffixIcon: Icon(Icons.calendar_today),
@@ -77,10 +114,10 @@ class _StaffProfileDashboardScreenState
                       firstDate: DateTime(1900),
                       lastDate: DateTime.now(),
                     );
-
                     if (pickedDate != null) {
+                      // Change format to yyyy-mm-dd
                       dobController.text =
-                          "${pickedDate.day}-${pickedDate.month}-${pickedDate.year}";
+                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
                     }
                   },
                 ),
@@ -99,32 +136,33 @@ class _StaffProfileDashboardScreenState
                       child: Text("Cancel"),
                     ),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (nameController.text.isNotEmpty &&
                             selectedGender != null &&
                             dobController.text.isNotEmpty &&
                             emailController.text.isNotEmpty) {
-                          setState(() {
-                            if (editIndex == null) {
-                              staffList.add({
-                                "name": nameController.text,
-                                "gender": selectedGender!,
-                                "dob": dobController.text,
-                                "email": emailController.text,
-                                "staff_id":
-                                    "staff${staffList.length + 1}", // Unique ID
-                              });
-                            } else {
-                              staffList[editIndex] = {
-                                "name": nameController.text,
-                                "gender": selectedGender!,
-                                "dob": dobController.text,
-                                "email": emailController.text,
-                                "staff_id": staffList[editIndex]
-                                    ["staff_id"]!, // Keep same ID
-                              };
-                            }
-                          });
+                          if (editIndex == null) {
+                            // Generate a new staff_id
+                            final staffId = await _generateStaffId();
+
+                            // Insert the new staff record
+                            await supabase.from('staffs').insert({
+                              "staff_id": staffId,
+                              "name": nameController.text,
+                              "gender": selectedGender,
+                              "dob": dobController.text,
+                              "email": emailController.text,
+                            });
+                          } else {
+                            // Update the existing staff record
+                            await supabase.from('staffs').update({
+                              "name": nameController.text,
+                              "gender": selectedGender,
+                              "dob": dobController.text,
+                              "email": emailController.text,
+                            }).eq("staff_id", staffList[editIndex]["staff_id"]);
+                          }
+                          _fetchStaffs();
                           Navigator.of(context).pop();
                         }
                       },
@@ -140,10 +178,12 @@ class _StaffProfileDashboardScreenState
     );
   }
 
-  void _deleteStaff(int index) {
-    setState(() {
-      staffList.removeAt(index);
-    });
+  Future<void> _deleteStaff(int index) async {
+    await supabase
+        .from('staffs')
+        .delete()
+        .eq("Staff ID", staffList[index]["Staff ID"]);
+    _fetchStaffs();
   }
 
   @override
@@ -154,7 +194,7 @@ class _StaffProfileDashboardScreenState
       body: Stack(
         children: [
           Positioned(
-            top: 15,
+            top: 10,
             left: 10,
             right: 0,
             child: Text(
@@ -166,7 +206,7 @@ class _StaffProfileDashboardScreenState
             ),
           ),
           Positioned(
-            top: 40,
+            top: 45,
             height: 250,
             left: 0,
             right: 0,
@@ -203,7 +243,7 @@ class _StaffProfileDashboardScreenState
                           ))
                     ],
                   ),
-                  const SizedBox(width: 35),
+                  const SizedBox(width: 40),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,11 +256,11 @@ class _StaffProfileDashboardScreenState
                               .displayLarge
                               ?.copyWith(fontSize: 22),
                         ),
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 10),
                         Text("STAFF ID : {staffid_here}"),
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 10),
                         Text("Password : xxxxxxxx"),
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 10),
                         Text(
                           "Reset Password?",
                           style: Theme.of(context)
@@ -254,7 +294,7 @@ class _StaffProfileDashboardScreenState
             child: Column(
               children: [
                 TextButton(
-                  onPressed: () => _showAddStaffDialog(),
+                  onPressed: () => _addOrUpdateStaff(),
                   child: Container(
                     width: 150,
                     height: 28,
@@ -280,37 +320,42 @@ class _StaffProfileDashboardScreenState
                     itemCount: staffList.length,
                     itemBuilder: (context, index) {
                       final staff = staffList[index];
-                      return ListTile(
-                        leading: Icon(Icons.person, color: Color(0xFFF9ECC8)),
-                        title: Text(staff["name"]!),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "\n\nStaff ID: ${staff["staff_id"]}",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFFF9ECC8),
-                                  fontSize: 12),
-                            ),
-                            Text("\n\n\n\nGender: ${staff["gender"]}\n\n\n"),
-                            Text("\n\n\nDOB: ${staff["dob"]}\n"),
-                            Text("\n\n\n\nEmail: ${staff["email"]}\n\n\n"),
-                          ],
+                      return Container(
+                        margin: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white, width: 1),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () =>
-                                  _showAddStaffDialog(editIndex: index),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _deleteStaff(index),
-                            ),
-                          ],
+                        child: ListTile(
+                          title: Text(staff["name"] ?? "Unknown",
+                              style: TextStyle(color: Color(0xFFF9ECC8))),
+                          subtitle: Text("Staff ID: ${staff["staff_id"]}"),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon:
+                                    Icon(Icons.edit, color: Color(0xFFF9ECC8)),
+                                onPressed: () =>
+                                    _addOrUpdateStaff(editIndex: index),
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.delete,
+                                  color: staffList[index]["staff_id"] ==
+                                          "ADMINPLS"
+                                      ? Color.fromRGBO(36, 35, 35,
+                                          0.298) // Faded color for disabled state
+                                      : Colors
+                                          .red, // Normal red color for enabled state
+                                ),
+                                onPressed:
+                                    staffList[index]["staff_id"] == "ADMINPLS"
+                                        ? null
+                                        : () => _deleteStaff(index),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
