@@ -3,7 +3,9 @@ import 'package:myapp/widgets/AppBar_2_AfterLogin.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StaffProfileDashboardScreen extends StatefulWidget {
-  const StaffProfileDashboardScreen({super.key});
+  final String staffName;
+
+  const StaffProfileDashboardScreen({super.key, required this.staffName});
 
   @override
   _StaffProfileDashboardScreenState createState() =>
@@ -14,7 +16,7 @@ class _StaffProfileDashboardScreenState
     extends State<StaffProfileDashboardScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
   List<Map<String, dynamic>> staffList = [];
-
+  String staffId = '';
   @override
   void initState() {
     super.initState();
@@ -302,14 +304,14 @@ class _StaffProfileDashboardScreenState
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Name : {name_here}",
+                          "Name : ${widget.staffName ?? 'ERROR'}",
                           style: Theme.of(context)
                               .textTheme
                               .displayLarge
                               ?.copyWith(fontSize: 22),
                         ),
                         const SizedBox(height: 10),
-                        Text("STAFF ID : {staffid_here}"),
+                        Text("STAFF ID : $staffId"),
                         const SizedBox(height: 10),
                         Text("Password : xxxxxxxx"),
                         const SizedBox(height: 10),

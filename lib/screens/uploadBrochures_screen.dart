@@ -5,9 +5,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:csv/csv.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UploadbrochuresScreen extends StatefulWidget {
-  const UploadbrochuresScreen({super.key});
+  final String staffName;
+  const UploadbrochuresScreen({super.key, required this.staffName});
 
   @override
   State<UploadbrochuresScreen> createState() => _UploadbrochuresScreenState();
@@ -148,7 +150,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
             top: 15,
             left: 10,
             child: Text(
-              "Welcome\n{staff_name_here}",
+              "Welcome \n${widget.staffName ?? 'Guest'}",
               style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   color: Colors.black,
                   fontWeight: FontWeight.w600,
@@ -157,10 +159,10 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
             ),
           ),
           Positioned(
-            top: 120,
+            top: 110,
             left: 10,
             child: Text(
-              "Upload Brochures or Images to ChatPLS to do\n\n\n\n\n\n\nsearching and find exact match.",
+              "Upload Files to Train the ChatPLS Model & \nFind Products Easily",
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium
@@ -168,9 +170,9 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
             ),
           ),
 
-          //UploadBrochures|Images Button Widget
+          //Upload Files Button Widget
           Positioned(
-            top: 150,
+            top: 160,
             child: TextButton(
               onPressed: pickFile,
               child: Container(
@@ -182,7 +184,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    "UPLOAD BROCHURES|IMAGES",
+                    "UPLOAD FILES",
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontSize: 15,
                           color: const Color(0xFFF9ECC8),
@@ -227,7 +229,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
             ),
           ),
           Positioned(
-              top: 310,
+              top: 300,
               left: 10,
               right: 0,
               child: Text(

@@ -1,11 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/home_screen_wl.dart';
-//import 'home_screen'; // Replace with the actual path of HomeScreenWl
+import 'package:myapp/screens/home_screen_wl.dart'; // Replace with the correct path
 
 class AppBarAfterLogin extends StatelessWidget implements PreferredSizeWidget {
   final String title;
 
   const AppBarAfterLogin({super.key, required this.title});
+
+  // Function to log out the user (clear session or authentication data)
+  void _logout(BuildContext context) {
+    // Assuming you have a method to clear the user session or any authentication state
+    // Example: AuthService.logout(); (Clear any auth state, tokens, etc.)
+
+    // Show the confirmation dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Logout"),
+          content: Text("Are you sure you want to log out?"),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                // Perform logout and navigate to HomeScreenWl
+                // You can replace the below line with your actual logout method
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeScreenWl()),
+                );
+              },
+              child: Text("Logout"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,13 +87,8 @@ class AppBarAfterLogin extends StatelessWidget implements PreferredSizeWidget {
             top: 10,
             right: 0,
             child: TextButton(
-              onPressed: () {
-                // Navigate to HomeScreenWl
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomeScreenWl()),
-                );
-              },
+              onPressed: () =>
+                  _logout(context), // Trigger logout on button press
               child: Text(
                 "Logout?",
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(

@@ -6,7 +6,12 @@ import 'staff_profile_dashboard_screen.dart';
 
 //foradmins
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  final String staffName;
+
+  const MainNavigationScreen({
+    super.key,
+    required this.staffName,
+  });
 
   @override
   _MainNavigationScreenState createState() => _MainNavigationScreenState();
@@ -14,18 +19,22 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
+  late List<Widget> _pages;
 
-  // List of pages corresponding to each tab
-  final List<Widget> _pages = [
-    //HomeScreenAl(),
-    UploadbrochuresScreen(),
-    AiChatScreen(),
-    StaffProfileDashboardScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      HomeScreenAl(staffName: widget.staffName), // Pass staffName properly
+      UploadbrochuresScreen(staffName: widget.staffName),
+      AiChatScreen(),
+      StaffProfileDashboardScreen(
+        staffName: widget.staffName,
+      ),
+    ];
+  }
 
-  // Handle bottom navigation bar item taps
   void _onItemTapped(int index) {
-    print("Selected Index: $index");
     setState(() {
       _selectedIndex = index;
     });
@@ -34,7 +43,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex], // Display the selected page
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Color(0xFFFF9F07),
