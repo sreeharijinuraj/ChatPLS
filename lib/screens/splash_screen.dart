@@ -1,11 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/screens/home_screen_wl.dart';
+import 'dart:async';
 
-class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
+class SplashScreen extends StatefulWidget {
+// Declare staffName as a parameter
+
+  const SplashScreen({super.key}); // Provide a default value
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Delay for 3 seconds and then navigate to the main screen
+    Timer(Duration(seconds: 5), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => HomeScreenWl(),
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFF9ECC8),
       body: Stack(
         children: [
           Column(
@@ -37,7 +60,7 @@ class SplashScreen extends StatelessWidget {
             ],
           ),
           Positioned(
-            bottom: 30,
+            bottom: 60,
             left: 0,
             right: 0,
             child: Text(

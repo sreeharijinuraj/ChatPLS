@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/widgets/AppBar_2_AfterLogin.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreenAl extends StatelessWidget {
-  const HomeScreenAl({super.key});
+  final String staffName; // Receive staff name as a parameter
+  const HomeScreenAl({super.key, required this.staffName});
+
+  Future<String> _getStaffName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('staffName') ??
+        'Guest'; // Default to 'Guest' if no name is found
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,25 +23,45 @@ class HomeScreenAl extends StatelessWidget {
           Positioned(
             top: 10,
             left: 15,
-            child: Column(
-              children: [
-                Text.rich(TextSpan(children: [
-                  TextSpan(
-                      text: "Welcome",
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                          color: const Color(0xFFFF9F07),
-                          fontWeight: FontWeight.w500,
-                          height: 1.5,
-                          fontSize: 26)),
-                  TextSpan(
-                      text: ", {staff_name_here}",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: const Color(0xFFE6AC11),
-                          fontWeight: FontWeight.w300,
-                          height: 1.5,
-                          fontSize: 26))
-                ])),
-              ],
+            child: FutureBuilder<String>(
+              future: _getStaffName(), // Fetch staff name asynchronously
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator(); // Show loading indicator while fetching
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else if (snapshot.hasData) {
+                  return Column(
+                    children: [
+                      Text.rich(TextSpan(children: [
+                        TextSpan(
+                            text: "Welcome",
+                            style: Theme.of(context)
+                                .textTheme
+                                .displayLarge
+                                ?.copyWith(
+                                    color: const Color(0xFFFF9F07),
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.5,
+                                    fontSize: 26)),
+                        TextSpan(
+                            text: ", ${staffName}",
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(
+                                    color: const Color(0xFFE6AC11),
+                                    fontWeight: FontWeight.w300,
+                                    height: 1.5,
+                                    fontSize: 26))
+                      ])),
+                    ],
+                  );
+                } else {
+                  return Text(
+                      "Welcome, Guest"); // Default text if no data is available
+                }
+              },
             ),
           ),
           Positioned(

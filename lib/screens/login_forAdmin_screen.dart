@@ -7,6 +7,7 @@ class LoginForadminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9ECC8),
       appBar: const Appbar1(),
       body: Container(
         child: Stack(
@@ -48,7 +49,7 @@ class LoginForadminScreen extends StatelessWidget {
                       ),
                     ))),
             Positioned(
-                top: 290,
+                top: 265,
                 left: 0,
                 right: 0,
                 child: SizedBox(
@@ -138,7 +139,7 @@ class LoginForadminScreen extends StatelessWidget {
                     ),
                     TextButton(
                         onPressed: () {
-                          print("SINGUP button clicked");
+                          print("LOGIN button clicked");
                         },
                         child: Container(
                           width: 140,

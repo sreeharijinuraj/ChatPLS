@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/screens/MainNavigationScreen.dart';
+import 'package:myapp/screens/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -57,7 +58,7 @@ class ChatPLS extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF9ECC8)),
         useMaterial3: true,
       ),
-      home: const MainNavigationScreen(),
+      home: const SplashScreen(),
     );
   }
 }

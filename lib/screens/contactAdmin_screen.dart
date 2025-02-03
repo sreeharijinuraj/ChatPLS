@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/screens/signup_forStaffs_screen.dart';
 import 'package:myapp/widgets/AppBar_1.dart';
 
 class ContactadminScreen extends StatelessWidget {
@@ -7,6 +8,7 @@ class ContactadminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFF9ECC8),
       appBar: const Appbar1(),
       body: Container(
         child: Stack(
@@ -61,25 +63,27 @@ class ContactadminScreen extends StatelessWidget {
                   ),
                 )),
             Positioned(
-                top: 320,
+                top: 335,
                 left: 0,
                 right: 0,
                 child: SizedBox(
                   width: 340,
                   height: 50,
-                  child: SizedBox(width: 340,height: 60,
+                  child: SizedBox(
+                    width: 340,
+                    height: 60,
                     child: Text(
-                      "Contact administrator for a StaffID at \n\n\n\n\n\n\nPowerwin.",
+                      "Contact administrator for a StaffID at Powerwin.",
                       style: Theme.of(context)
                           .textTheme
                           .titleLarge!
-                          .copyWith(fontSize: 20),
+                          .copyWith(fontSize: 14),
                       textAlign: TextAlign.center,
                     ),
                   ),
                 )),
             Positioned(
-              top: 350,
+              top: 360,
               left: 0,
               right: 0,
               child: Padding(
@@ -89,6 +93,12 @@ class ContactadminScreen extends StatelessWidget {
                   children: [
                     TextButton(
                         onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const SignupForstaffsScreen()),
+                          );
                           print("goback  button clicked");
                         },
                         child: Container(

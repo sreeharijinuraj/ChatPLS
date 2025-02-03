@@ -67,6 +67,8 @@ class _StaffProfileDashboardScreenState
       emailController.text = staff["email"];
     }
 
+    final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -80,97 +82,147 @@ class _StaffProfileDashboardScreenState
                 ?.copyWith(fontSize: 22, color: Color(0xFFFF9F07)),
           ),
           content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(labelText: "Name"),
-                ),
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(labelText: "Gender"),
-                  value: selectedGender,
-                  items: ["Male", "Female"].map((String gender) {
-                    return DropdownMenuItem<String>(
-                      value: gender,
-                      child: Text(gender),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    selectedGender = value;
-                  },
-                ),
-                TextField(
-                  controller: dobController,
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    labelText: "Date of Birth",
-                    suffixIcon: Icon(Icons.calendar_today),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: InputDecoration(labelText: "Name"),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Name is required';
+                      }
+                      if (value.length > 30) {
+                        return 'Name should not exceed 30 characters';
+                      }
+                      if (!RegExp(r'^[A-Z][a-zA-Z ]*$').hasMatch(value)) {
+                        return 'Name should start with a capital letter and contain no special symbols or numbers';
+                      }
+                      return null;
+                    },
                   ),
-                  onTap: () async {
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(1900),
-                      lastDate: DateTime.now(),
-                    );
-                    if (pickedDate != null) {
-                      // Change format to yyyy-mm-dd
-                      dobController.text =
-                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
-                    }
-                  },
-                ),
-                TextField(
-                  controller: emailController,
-                  decoration: InputDecoration(labelText: "Email"),
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text("Cancel"),
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(labelText: "Gender"),
+                    value: selectedGender,
+                    items: ["Male", "Female"].map((String gender) {
+                      return DropdownMenuItem<String>(
+                        value: gender,
+                        child: Text(gender),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      selectedGender = value;
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Gender is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: dobController,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      labelText: "Date of Birth",
+                      suffixIcon: Icon(Icons.calendar_today),
                     ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (nameController.text.isNotEmpty &&
-                            selectedGender != null &&
-                            dobController.text.isNotEmpty &&
-                            emailController.text.isNotEmpty) {
-                          if (editIndex == null) {
-                            // Generate a new staff_id
-                            final staffId = await _generateStaffId();
-
-                            // Insert the new staff record
-                            await supabase.from('staffs').insert({
-                              "staff_id": staffId,
-                              "name": nameController.text,
-                              "gender": selectedGender,
-                              "dob": dobController.text,
-                              "email": emailController.text,
-                            });
-                          } else {
-                            // Update the existing staff record
-                            await supabase.from('staffs').update({
-                              "name": nameController.text,
-                              "gender": selectedGender,
-                              "dob": dobController.text,
-                              "email": emailController.text,
-                            }).eq("staff_id", staffList[editIndex]["staff_id"]);
-                          }
-                          _fetchStaffs();
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime.now(),
+                      );
+                      if (pickedDate != null) {
+                        // Change format to yyyy-mm-dd
+                        dobController.text =
+                            "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                      }
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Date of Birth is required';
+                      }
+                      DateTime dob = DateTime.parse(value);
+                      DateTime now = DateTime.now();
+                      int age = now.year - dob.year;
+                      if (now.month < dob.month ||
+                          (now.month == dob.month && now.day < dob.day)) {
+                        age--;
+                      }
+                      if (age < 18) {
+                        return 'You must be at least 18 years old';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: emailController,
+                    decoration: InputDecoration(labelText: "Email"),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Email is required';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                          .hasMatch(value)) {
+                        return 'Enter a valid email address';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () {
                           Navigator.of(context).pop();
-                        }
-                      },
-                      child: Text(editIndex == null ? "Create" : "Update"),
-                    ),
-                  ],
-                )
-              ],
+                        },
+                        child: Text("Cancel"),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            if (nameController.text.isNotEmpty &&
+                                selectedGender != null &&
+                                dobController.text.isNotEmpty &&
+                                emailController.text.isNotEmpty) {
+                              if (editIndex == null) {
+                                // Generate a new staff_id
+                                final staffId = await _generateStaffId();
+
+                                // Insert the new staff record
+                                await supabase.from('staffs').insert({
+                                  "staff_id": staffId,
+                                  "name": nameController.text,
+                                  "gender": selectedGender,
+                                  "dob": dobController.text,
+                                  "email": emailController.text,
+                                });
+                              } else {
+                                // Update the existing staff record
+                                await supabase.from('staffs').update({
+                                  "name": nameController.text,
+                                  "gender": selectedGender,
+                                  "dob": dobController.text,
+                                  "email": emailController.text,
+                                }).eq("staff_id",
+                                    staffList[editIndex]["staff_id"]);
+                              }
+                              _fetchStaffs();
+                              Navigator.of(context).pop();
+                            }
+                          }
+                        },
+                        child: Text(editIndex == null ? "Create" : "Update"),
+                      ),
+                    ],
+                  )
+                ],
+              ),
             ),
           ),
         );
@@ -328,8 +380,18 @@ class _StaffProfileDashboardScreenState
                         ),
                         child: ListTile(
                           title: Text(staff["name"] ?? "Unknown",
-                              style: TextStyle(color: Color(0xFFF9ECC8))),
-                          subtitle: Text("Staff ID: ${staff["staff_id"]}"),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displayLarge
+                                  ?.copyWith(
+                                      fontSize: 18, color: Color(0xFFF9ECC8))),
+                          subtitle: Text(
+                            "Staff ID: ${staff["staff_id"]}",
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(color: Color(0xFFF9ECC8)),
+                          ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
