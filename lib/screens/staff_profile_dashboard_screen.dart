@@ -311,7 +311,7 @@ class _StaffProfileDashboardScreenState
                               ?.copyWith(fontSize: 22),
                         ),
                         const SizedBox(height: 10),
-                        Text("STAFF ID : $staffId"),
+                        Text("STAFF ID : ADMINPLS"),
                         const SizedBox(height: 10),
                         Text("Password : xxxxxxxx"),
                         const SizedBox(height: 10),

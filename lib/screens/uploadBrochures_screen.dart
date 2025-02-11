@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:myapp/widgets/AppBar_2_AfterLogin.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:csv/csv.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:myapp/widgets/AppBar_2_AfterLogin.dart';
 
 class UploadbrochuresScreen extends StatefulWidget {
   final String staffName;
@@ -16,8 +15,77 @@ class UploadbrochuresScreen extends StatefulWidget {
 }
 
 class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
-  List<Map<String, String>> uploadedItems = []; // Holds uploaded files
-  String searchQuery = ""; // For search functionality
+  List<Map<String, String>> uploadedItems = [];
+  String searchQuery = "";
+
+  @override
+  void initState() {
+    super.initState();
+    loadUploadedFiles();
+  }
+
+  Future<bool> checkFileExists(String fileName) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.0.112:5000/check_file?file_name=$fileName'),
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        return data['exists'];
+      } else {
+        throw Exception("Failed to check file existence");
+      }
+    } catch (e) {
+      print("Error checking file existence: $e");
+      return false;
+    }
+  }
+
+  Future<void> loadUploadedFiles() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.0.112:5000/get_uploaded_files'),
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        print("API Response from Server: $data");
+
+        List<Map<String, String>> formattedData = (data as List).map((item) {
+          return {
+            "name": item["name"] != null && item["name"] != ""
+                ? item["name"].toString()
+                : "No Name",
+            "dateTime": item["dateTime"] != null && item["dateTime"] != ""
+                ? item["dateTime"].toString()
+                : "No Date",
+            "type": item["type"] != null && item["type"] != ""
+                ? item["type"].toString()
+                : "Unknown",
+            "staffId": item["staffId"] != null && item["staffId"] != ""
+                ? item["staffId"].toString()
+                : "No ID",
+          };
+        }).toList();
+
+        setState(() {
+          uploadedItems = formattedData;
+        });
+
+        print("Formatted Uploaded Items: $uploadedItems");
+      } else {
+        throw Exception("Failed to load uploaded files");
+      }
+    } catch (e) {
+      print("Error fetching uploaded files: $e");
+    }
+  }
+
+  Future<void> saveUploadedFiles() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('uploadedFiles', json.encode(uploadedItems));
+  }
 
   void pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -27,31 +95,25 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
 
     if (result != null) {
       PlatformFile file = result.files.single;
-
-      //String? fileExtension = file.extension?.toLowerCase();
-      // Check for valid extensions
-      if (file.extension == null ||
-          !['pdf', 'csv'].contains(file.extension!.toLowerCase())) {
+      if (file.bytes == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text(
-                "Invalid file type. Only PDF and CSV files are allowed."),
-            backgroundColor: Colors.red,
-          ),
+              content: Text("Error: File bytes are null."),
+              backgroundColor: Colors.red),
         );
         return;
       }
 
-      if (file.size > 30 * 1024 * 1024) {
+      // Check if file exists in ChromaDB
+      bool fileExists = await checkFileExists(file.name);
+      if (fileExists) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("File size should not exceed 30MB."),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text("File already exists in database!")),
         );
         return;
       }
 
+      // Show Uploading Dialog
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -62,10 +124,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
               children: const [
                 CircularProgressIndicator(),
                 SizedBox(height: 20),
-                Text(
-                  "Wait for a while...\n\n\n\n\n\n File is getting uploaded.",
-                  textAlign: TextAlign.center,
-                ),
+                Text("Uploading file... Please wait."),
               ],
             ),
           );
@@ -73,20 +132,15 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
       );
 
       try {
-        // Determine the endpoint based on file type
         String endpoint = file.extension!.toLowerCase() == 'csv'
-            ? 'http://192.168.0.110:5000/upload_csv' // Endpoint for CSV
-            : 'http://192.168.0.110:5000/upload'; // Endpoint for PDFs
+            ? 'http://192.168.0.112:5000/upload_csv'
+            : 'http://127.0.0.112:5000/upload';
 
-        // Prepare the HTTP request
-        var request = http.MultipartRequest(
-          'POST',
-          Uri.parse(endpoint),
-        );
-        request.fields['staff_id'] = '123'; // Pass the staff ID
+        var request = http.MultipartRequest('POST', Uri.parse(endpoint));
+        request.fields['staff_id'] = '123';
         request.files.add(
           http.MultipartFile.fromBytes(
-            'file', // Key for the file in the backend
+            'file',
             file.bytes!,
             filename: file.name,
             contentType: MediaType(
@@ -96,43 +150,117 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
           ),
         );
 
-        // Send the request
         var response = await request.send();
+        if (Navigator.canPop(context)) Navigator.of(context).pop();
 
-        if (Navigator.canPop(context))
-          Navigator.of(context).pop(); // Close the dialog
+        var responseData = await response.stream.bytesToString();
+        print("Response from server: $responseData");
 
         if (response.statusCode == 200) {
-          // Parse the response
-          var responseData = await response.stream.bytesToString();
           var data = json.decode(responseData);
+          if (data['file_name'] == null || data['created_at'] == null) {
+            throw Exception(
+                "Unexpected response format: Missing required fields");
+          }
 
-          // Update the UI with the uploaded file information
           setState(() {
             uploadedItems.add({
               "name": data['file_name'],
               "dateTime": data['created_at'],
               "type": file.extension!.toLowerCase(),
-              "staffId": data['staff_id'],
+              "staffId": data['staff_id'] ?? 'Unknown',
             });
           });
-
+          await saveUploadedFiles();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(
-                    "${file.extension!.toUpperCase()} file uploaded successfully!")),
+            SnackBar(content: Text("File uploaded successfully!")),
           );
         } else {
           throw Exception("Upload failed: ${response.reasonPhrase}");
         }
       } catch (e) {
-        if (Navigator.canPop(context))
-          Navigator.of(context).pop(); // Close the dialog
+        if (Navigator.canPop(context)) Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error: $e")),
         );
       }
     }
+  }
+
+  void deleteFile(String fileName, int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Confirm Deletion",
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          content: Text(
+            "Are you sure you want to delete \"$fileName\"?",
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: Text(
+                "Cancel",
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close dialog before deletion
+
+                try {
+                  final response = await http.delete(
+                    Uri.parse('http://192.168.0.112:5000/delete_file'),
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({"file_name": fileName}),
+                  );
+
+                  if (response.statusCode == 200) {
+                    setState(() {
+                      uploadedItems.removeAt(index);
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("File deleted successfully!")),
+                    );
+                  } else {
+                    var error = json.decode(response.body)['error'];
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Error: $error")),
+                    );
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Error deleting file: $e")),
+                  );
+                }
+              },
+              child: Text(
+                "Yes, Delete",
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w600, color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -150,7 +278,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
             top: 15,
             left: 10,
             child: Text(
-              "Welcome \n${widget.staffName ?? 'Guest'}",
+              "Welcome \n${widget.staffName}",
               style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   color: Colors.black,
                   fontWeight: FontWeight.w600,
@@ -169,8 +297,6 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
                   ?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
-
-          //Upload Files Button Widget
           Positioned(
             top: 160,
             child: TextButton(
@@ -194,8 +320,6 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
               ),
             ),
           ),
-
-          //SearchBrochuresWidget
           Positioned(
             top: 220,
             left: 10,
@@ -229,17 +353,15 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
             ),
           ),
           Positioned(
-              top: 300,
-              left: 10,
-              right: 0,
-              child: Text(
-                "Uploaded Brochures & Images",
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      fontSize: 25,
-                    ),
-              )),
-
-          //!Widget to display the List of uploaded files..
+            top: 300,
+            left: 10,
+            child: Text(
+              "Uploaded Brochures & Images",
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                    fontSize: 25,
+                  ),
+            ),
+          ),
           Positioned(
             top: 340,
             left: 0,
@@ -252,49 +374,24 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
                 itemCount: displayedItems.length,
                 itemBuilder: (context, index) {
                   final item = displayedItems[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white, width: 1),
-                      borderRadius: BorderRadius.circular(8),
+                  return ListTile(
+                    leading: Icon(
+                      item['type'] == 'pdf'
+                          ? Icons.picture_as_pdf
+                          : item['type'] == 'csv'
+                              ? Icons.insert_drive_file // Icon for CSV files
+                              : Icons.image,
+                      color: Color(0xFFF9ECC8),
+                      size: 30,
                     ),
-                    child: ListTile(
-                      leading: Icon(
-                        item['type'] == 'pdf'
-                            ? Icons.picture_as_pdf
-                            : Icons.image,
-                        color: Color(0xFFF9ECC8),
-                        size: 30,
-                      ),
-                      title: Text(item['name']!.toUpperCase(),
-                          style: const TextStyle(
-                            color: Color(0xFFF9ECC8),
-                            fontFamily: 'Saira',
-                            fontWeight: FontWeight.w800,
-                          )),
-                      subtitle: Text(
-                        "\n\n\nUploaded on:\n\n\n\n\n\n${item['dateTime']}\n\n\n\n\n\nUploaded by: ${item['staffId']}\n\n",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
+                    title: Text(item['name']!.toUpperCase(),
+                        style: const TextStyle(
                           color: Color(0xFFF9ECC8),
-                          fontSize: 12,
-                        ),
-                      ),
-                      trailing: IconButton(
-                        icon:
-                            const Icon(Icons.delete, color: Color(0xFFF9ECC8)),
-                        onPressed: () {
-                          setState(() {
-                            uploadedItems.removeAt(index);
-                          });
-                        },
-                      ),
-                      tileColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 15),
+                          fontWeight: FontWeight.w800,
+                        )),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Color(0xFFF9ECC8)),
+                      onPressed: () => deleteFile(item['name']!, index),
                     ),
                   );
                 },

@@ -14,13 +14,27 @@ class AiChatScreen extends StatefulWidget {
 class _AiChatScreenState extends State<AiChatScreen> {
   List<Map<String, dynamic>> chatMessages = [];
   bool isLoading = false;
+  void _simulateTyping(String fullText) async {
+    setState(() {
+      chatMessages.add({'isSender': false, 'text': ''});
+    });
+
+    int index = chatMessages.length - 1;
+    for (int i = 0; i < fullText.length; i++) {
+      await Future.delayed(const Duration(milliseconds: 30)); // Speed of typing
+      setState(() {
+        chatMessages[index]['text'] += fullText[i];
+      });
+    }
+  }
 
   Future<void> sendQuery(String query) async {
-    final url = Uri.parse('http://192.168.0.110:5000/search');
+    final url = Uri.parse('http://192.168.0.112:5000/search');
     try {
       setState(() {
         isLoading = true;
       });
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -32,38 +46,23 @@ class _AiChatScreenState extends State<AiChatScreen> {
         final results = data['results'] as List;
 
         if (results.isEmpty) {
-          setState(() {
-            chatMessages.add({
-              'isSender': false,
-              'text': 'No matching results found in the database.'
-            });
-          });
+          _simulateTyping("No matching results found in the database.");
         } else {
           for (var result in results) {
             final content = result['content'];
             final fileName = result['file_name'];
             final similarity = result['similarity'];
-
-            setState(() {
-              chatMessages.add({
-                'isSender': false,
-                'text':
-                    'Match: $fileName\n\n\n\n\nContent: $content\n\n\n\n\n\n\n\n\n\n\nSimilarity: $similarity\n\n\n\n\n\n',
-              });
-            });
+            String fullMessage =
+                'Match: $fileName\n\nContent: $content\n\nSimilarity: $similarity';
+            _simulateTyping(fullMessage);
           }
         }
       } else {
-        setState(() {
-          chatMessages.add({'isSender': false, 'text': 'Error from server.'});
-        });
+        _simulateTyping("Error from server.");
       }
     } catch (e) {
       print('Error: $e');
-      setState(() {
-        chatMessages
-            .add({'isSender': false, 'text': 'Failed to fetch response.'});
-      });
+      _simulateTyping("Failed to fetch response.");
     } finally {
       setState(() {
         isLoading = false;
@@ -213,13 +212,13 @@ class _AiChatScreenState extends State<AiChatScreen> {
                                   if (!message['isSender'] &&
                                       message['text'].contains('Match:')) ...[
                                     const SizedBox(height: 5),
-                                    Text(
-                                      "Certainly! Here's the result From ChatPLS:\n\n\n",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
+                                    // Text(
+                                    //   "Certainly! Here's the result From ChatPLS:\n\n\n",
+                                    //   style: const TextStyle(
+                                    //     fontWeight: FontWeight.bold,
+                                    //     fontSize: 16,
+                                    //   ),
+                                    // ),
                                     const SizedBox(height: 5),
                                     Text(
                                       message['text'].replaceAll("\n\n", ""),

@@ -57,7 +57,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             label: "Upload",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add),
+            icon: Icon(Icons.),
             label: "AI Chat",
           ),
           BottomNavigationBarItem(
