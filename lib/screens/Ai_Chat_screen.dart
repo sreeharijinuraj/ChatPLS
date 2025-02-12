@@ -43,26 +43,23 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final results = data['results'] as List;
 
-        if (results.isEmpty) {
-          _simulateTyping("No matching results found in the database.");
+        print("API Response: $data"); // Debugging
+
+        // Check if the 'response' field exists and is valid
+        if (data.containsKey('response') && data['response'] is String) {
+          _simulateTyping(data['response']); // Display AI response
         } else {
-          for (var result in results) {
-            final content = result['content'];
-            final fileName = result['file_name'];
-            final similarity = result['similarity'];
-            String fullMessage =
-                'Match: $fileName\n\nContent: $content\n\nSimilarity: $similarity';
-            _simulateTyping(fullMessage);
-          }
+          _simulateTyping("No relevant response received.");
         }
       } else {
-        _simulateTyping("Error from server.");
+        _simulateTyping(
+            "Error from server. Status Code: ${response.statusCode}");
       }
     } catch (e) {
       print('Error: $e');
-      _simulateTyping("Failed to fetch response.");
+      _simulateTyping(
+          "Failed to fetch response due to network or server issues.");
     } finally {
       setState(() {
         isLoading = false;
@@ -198,35 +195,21 @@ class _AiChatScreenState extends State<AiChatScreen> {
                                     textAlign: TextAlign.start,
                                     softWrap: true,
                                     maxLines: null,
-                                    message['text'],
+                                    message['text'].replaceAll("\n\n",
+                                        ""), // Remove unnecessary newlines
                                     style: TextStyle(
+                                      fontWeight: FontWeight.w600,
                                       fontSize: 16,
+                                      fontFamily:
+                                          'Saira', // Ensure only 'Saira' font is used
                                       color: message['isSender']
-                                          ? const Color(
-                                              0xFFF9ECC8) // Text color for sender
-                                          : const Color(
-                                              0xFF000000), // Text color for receiver
-                                      fontFamily: 'Saira',
+                                          ? Colors
+                                              .white // Set sender message text color
+                                          : Color(
+                                              0xFFFF9F07), // Set receiver message text color
+                                      height: 1.7, // Set proper text height
                                     ),
                                   ),
-                                  if (!message['isSender'] &&
-                                      message['text'].contains('Match:')) ...[
-                                    const SizedBox(height: 5),
-                                    // Text(
-                                    //   "Certainly! Here's the result From ChatPLS:\n\n\n",
-                                    //   style: const TextStyle(
-                                    //     fontWeight: FontWeight.bold,
-                                    //     fontSize: 16,
-                                    //   ),
-                                    // ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      message['text'].replaceAll("\n\n", ""),
-                                      style: const TextStyle(
-                                        height: 1.5,
-                                      ),
-                                    ),
-                                  ],
                                 ]),
                           ),
                         ),
