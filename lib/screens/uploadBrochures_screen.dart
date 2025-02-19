@@ -22,6 +22,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
   void initState() {
     super.initState();
     loadUploadedFiles();
+    loadUploadedImages();
   }
 
   Future<bool> checkFileExists(String fileName) async {
@@ -82,6 +83,40 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
     }
   }
 
+  Future<void> loadUploadedImages() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.0.112:5000/get_uploaded_images'),
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        print("Image API Response from Server: $data"); // Debugging log
+
+        if (data is List) {
+          List<Map<String, String>> imageData = data.map((item) {
+            return {
+              "name": item["name"]?.toString() ?? "No Name",
+              "type": "image", // Explicitly mark as image
+              "url":
+                  "http://192.168.0.112:5000/get_uploaded_images/${item["name"]}",
+            };
+          }).toList();
+
+          setState(() {
+            uploadedItems.addAll(imageData); // Append instead of replacing
+          });
+
+          print("Formatted Image Items: $uploadedItems"); // Debugging log
+        }
+      } else {
+        print("Failed to load images: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching uploaded images: $e");
+    }
+  }
+
   Future<void> saveUploadedFiles() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('uploadedFiles', json.encode(uploadedItems));
@@ -89,100 +124,120 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
 
   void pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'csv'],
-        withData: true);
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'csv', 'jpg', 'jpeg', 'png'],
+      withData: true,
+      allowMultiple: true, // Allow multiple files to be picked
+    );
 
     if (result != null) {
-      PlatformFile file = result.files.single;
-      if (file.bytes == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text("Error: File bytes are null."),
-              backgroundColor: Colors.red),
-        );
-        return;
-      }
-
-      // Check if file exists in ChromaDB
-      bool fileExists = await checkFileExists(file.name);
-      if (fileExists) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("File already exists in database!")),
-        );
-        return;
-      }
-
-      // Show Uploading Dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                CircularProgressIndicator(),
-                SizedBox(height: 20),
-                Text("Uploading file... Please wait."),
-              ],
+      // Loop through all selected files
+      for (var file in result.files) {
+        if (file.bytes == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Error: File bytes are null for ${file.name}."),
+              backgroundColor: Colors.red,
             ),
           );
-        },
-      );
+          continue; // Skip this file and move to the next
+        }
 
-      try {
-        String endpoint = file.extension!.toLowerCase() == 'csv'
-            ? 'http://192.168.0.112:5000/upload_csv'
-            : 'http://127.0.0.112:5000/upload';
+        // Check if file exists in ChromaDB
+        bool fileExists = await checkFileExists(file.name);
+        if (fileExists) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text("File already exists in database: ${file.name}")),
+          );
+          continue; // Skip this file and move to the next
+        }
 
-        var request = http.MultipartRequest('POST', Uri.parse(endpoint));
-        request.fields['staff_id'] = '123';
-        request.files.add(
-          http.MultipartFile.fromBytes(
-            'file',
-            file.bytes!,
-            filename: file.name,
-            contentType: MediaType(
-              file.extension!.toLowerCase() == 'csv' ? 'text' : 'application',
-              file.extension!,
-            ),
-          ),
+        // Show Uploading Dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text("Uploading files... Please wait."),
+                ],
+              ),
+            );
+          },
         );
 
-        var response = await request.send();
-        if (Navigator.canPop(context)) Navigator.of(context).pop();
-
-        var responseData = await response.stream.bytesToString();
-        print("Response from server: $responseData");
-
-        if (response.statusCode == 200) {
-          var data = json.decode(responseData);
-          if (data['file_name'] == null || data['created_at'] == null) {
-            throw Exception(
-                "Unexpected response format: Missing required fields");
+        try {
+          // Determine API endpoint based on file type
+          String endpoint;
+          if (['jpg', 'jpeg', 'png'].contains(file.extension!.toLowerCase())) {
+            endpoint = 'http://192.168.0.112:5000/upload_image';
+          } else if (file.extension!.toLowerCase() == 'csv') {
+            endpoint = 'http://192.168.0.112:5000/upload_csv';
+          } else {
+            endpoint = 'http://192.168.0.112:5000/upload';
           }
 
-          setState(() {
-            uploadedItems.add({
-              "name": data['file_name'],
-              "dateTime": data['created_at'],
-              "type": file.extension!.toLowerCase(),
-              "staffId": data['staff_id'] ?? 'Unknown',
-            });
-          });
-          await saveUploadedFiles();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("File uploaded successfully!")),
+          var request = http.MultipartRequest('POST', Uri.parse(endpoint));
+          request.fields['staff_id'] = '123';
+          request.files.add(
+            http.MultipartFile.fromBytes(
+              ['jpg', 'jpeg', 'png'].contains(file.extension!.toLowerCase())
+                  ? 'image'
+                  : 'file',
+              file.bytes!,
+              filename: file.name,
+              contentType: MediaType(
+                file.extension!.toLowerCase() == 'csv'
+                    ? 'text'
+                    : (['jpg', 'jpeg', 'png']
+                            .contains(file.extension!.toLowerCase())
+                        ? 'image'
+                        : 'application'),
+                file.extension!,
+              ),
+            ),
           );
-        } else {
-          throw Exception("Upload failed: ${response.reasonPhrase}");
+
+          var response = await request.send();
+          if (Navigator.canPop(context)) Navigator.of(context).pop();
+
+          var responseData = await response.stream.bytesToString();
+          print("Response from server: $responseData");
+
+          if (response.statusCode == 200) {
+            var data = json.decode(responseData);
+            if (data['file_name'] == null || data['created_at'] == null) {
+              throw Exception(
+                  "Unexpected response format: Missing required fields");
+            }
+
+            setState(() {
+              uploadedItems.add({
+                "name": data['file_name'],
+                "dateTime": data['created_at'],
+                "type": file.extension!.toLowerCase(),
+                "staffId": data['staff_id'] ?? 'Unknown',
+              });
+            });
+            await saveUploadedFiles();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text("File uploaded successfully: ${file.name}")),
+            );
+          } else {
+            throw Exception("Upload failed: ${response.reasonPhrase}");
+          }
+        } catch (e) {
+          if (Navigator.canPop(context)) Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error: $e")),
+          );
         }
-      } catch (e) {
-        if (Navigator.canPop(context)) Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
-        );
       }
     }
   }
@@ -224,8 +279,17 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
                 Navigator.of(context).pop(); // Close dialog before deletion
 
                 try {
+                  // Determine the endpoint based on file extension
+                  bool isImage = fileName.toLowerCase().endsWith('.jpg') ||
+                      fileName.toLowerCase().endsWith('.jpeg') ||
+                      fileName.toLowerCase().endsWith('.png');
+
+                  String endpoint = isImage
+                      ? 'http://192.168.0.112:5000/delete_image_file'
+                      : 'http://192.168.0.112:5000/delete_file';
+
                   final response = await http.delete(
-                    Uri.parse('http://192.168.0.112:5000/delete_file'),
+                    Uri.parse(endpoint),
                     headers: {'Content-Type': 'application/json'},
                     body: jsonEncode({"file_name": fileName}),
                   );
@@ -374,21 +438,37 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
                 itemCount: displayedItems.length,
                 itemBuilder: (context, index) {
                   final item = displayedItems[index];
+                  bool isImage = ['jpg', 'jpeg', 'png'].contains(item['type']);
+
                   return ListTile(
-                    leading: Icon(
-                      item['type'] == 'pdf'
-                          ? Icons.picture_as_pdf
-                          : item['type'] == 'csv'
-                              ? Icons.insert_drive_file // Icon for CSV files
-                              : Icons.image,
-                      color: Color(0xFFF9ECC8),
-                      size: 30,
+                    leading: isImage
+                        ? Image.network(
+                            item["url"]!,
+                            width: 50,
+                            height: 50,
+                            errorBuilder: (context, error, stackTrace) {
+                              print(
+                                  "Error loading image: $error"); // Debugging log
+                              return Icon(Icons.broken_image,
+                                  color: Colors.red);
+                            },
+                          )
+                        : Icon(
+                            item['type'] == 'pdf'
+                                ? Icons.picture_as_pdf
+                                : item['type'] == 'csv'
+                                    ? Icons.insert_drive_file
+                                    : Icons.image,
+                            color: Color(0xFFF9ECC8),
+                            size: 30,
+                          ),
+                    title: Text(
+                      item['name']!.toUpperCase(),
+                      style: const TextStyle(
+                        color: Color(0xFFF9ECC8),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                    title: Text(item['name']!.toUpperCase(),
-                        style: const TextStyle(
-                          color: Color(0xFFF9ECC8),
-                          fontWeight: FontWeight.w800,
-                        )),
                     trailing: IconButton(
                       icon: Icon(Icons.delete, color: Color(0xFFF9ECC8)),
                       onPressed: () => deleteFile(item['name']!, index),

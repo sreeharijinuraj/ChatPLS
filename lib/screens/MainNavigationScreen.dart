@@ -4,7 +4,7 @@ import 'uploadBrochures_screen.dart';
 import 'Ai_Chat_screen.dart';
 import 'staff_profile_dashboard_screen.dart';
 
-//foradmins
+// for admins
 class MainNavigationScreen extends StatefulWidget {
   final String staffName;
 
@@ -20,18 +20,29 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
   late List<Widget> _pages;
+  final ValueNotifier<Image?> _aiChatIcon = ValueNotifier<Image?>(null);
 
   @override
   void initState() {
     super.initState();
     _pages = [
-      HomeScreenAl(staffName: widget.staffName), // Pass staffName properly
+      HomeScreenAl(staffName: widget.staffName),
       UploadbrochuresScreen(staffName: widget.staffName),
       AiChatScreen(),
-      StaffProfileDashboardScreen(
-        staffName: widget.staffName,
-      ),
+      StaffProfileDashboardScreen(staffName: widget.staffName),
     ];
+    _loadAiChatIcon();
+  }
+
+  Future<void> _loadAiChatIcon() async {
+    try {
+      final image =
+          Image.asset("assets/images/CHATPLSLOGO2.png", width: 33, height: 33);
+      await precacheImage(image.image, context);
+      _aiChatIcon.value = image;
+    } catch (e) {
+      debugPrint("Error loading AI Chat icon: $e");
+    }
   }
 
   void _onItemTapped(int index) {
@@ -41,34 +52,47 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   @override
+  void dispose() {
+    _aiChatIcon.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Color(0xFFFF9F07),
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
+        backgroundColor: const Color(0xFFFF9F07),
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: "Home",
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.upload),
             label: "Upload",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add),
+            icon: ValueListenableBuilder<Image?>(
+              valueListenable: _aiChatIcon,
+              builder: (context, image, child) {
+                return image ??
+                    const SizedBox(
+                        width: 33, height: 33, child: Icon(Icons.chat));
+              },
+            ),
             label: "AI Chat",
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
             label: "Accounts",
           ),
         ],
         currentIndex: _selectedIndex,
-        unselectedItemColor: Color(0xFFF9ECC8),
+        unselectedItemColor: const Color(0xFFF9ECC8),
         selectedItemColor: Colors.black,
-        unselectedIconTheme: IconThemeData(size: 33),
+        unselectedIconTheme: const IconThemeData(size: 33),
         onTap: _onItemTapped,
       ),
     );

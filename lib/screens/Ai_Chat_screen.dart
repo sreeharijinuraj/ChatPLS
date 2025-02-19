@@ -3,6 +3,9 @@ import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:myapp/widgets/AppBar_OfChatScreen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
 
 class AiChatScreen extends StatefulWidget {
   const AiChatScreen({super.key});
@@ -58,6 +61,67 @@ class _AiChatScreenState extends State<AiChatScreen> {
       }
     } catch (e) {
       print('Error: $e');
+      _simulateTyping(
+          "Failed to fetch response due to network or server issues.");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      var status = await Permission.camera.request();
+      if (status != PermissionStatus.granted) {
+        _simulateTyping("Camera permission denied.");
+        return;
+      }
+    } else if (source == ImageSource.gallery) {
+      var status =
+          await Permission.photos.request(); // Correct API for Android 13+
+      if (status.isDenied || status.isPermanentlyDenied) {
+        _simulateTyping("Gallery access permission denied.");
+        return;
+      }
+    }
+
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: source);
+
+    if (image != null) {
+      File imageFile = File(image.path);
+      setState(() {
+        chatMessages.add(
+            {'isSender': true, 'text': '[Image Attached]', 'image': imageFile});
+      });
+      await _sendImage(imageFile);
+    }
+  }
+
+  Future<void> _sendImage(File imageFile) async {
+    final url = Uri.parse('http://192.168.0.112:5000/search_image');
+
+    try {
+      setState(() {
+        isLoading = true;
+      });
+
+      var request = http.MultipartRequest('POST', url);
+      request.files
+          .add(await http.MultipartFile.fromPath('image', imageFile.path));
+
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(responseData);
+        _simulateTyping(data['response'] ?? "No relevant results found.");
+      } else {
+        _simulateTyping(
+            "Error from server. Status Code: ${response.statusCode}");
+      }
+    } catch (e) {
       _simulateTyping(
           "Failed to fetch response due to network or server issues.");
     } finally {
@@ -191,25 +255,30 @@ class _AiChatScreenState extends State<AiChatScreen> {
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    textAlign: TextAlign.start,
-                                    softWrap: true,
-                                    maxLines: null,
-                                    message['text'].replaceAll("\n\n",
-                                        ""), // Remove unnecessary newlines
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                      fontFamily:
-                                          'Saira', // Ensure only 'Saira' font is used
-                                      color: message['isSender']
-                                          ? Colors
-                                              .white // Set sender message text color
-                                          : Color(
-                                              0xFFFF9F07), // Set receiver message text color
-                                      height: 1.7, // Set proper text height
+                                  // Conditional rendering based on whether the image is attached
+                                  if (message['image'] != null)
+                                    Image.file(
+                                        message['image']) // Display the image
+                                  else
+                                    Text(
+                                      message['text'].replaceAll("\n\n",
+                                          ""), // Remove unnecessary newlines
+                                      textAlign: TextAlign.start,
+                                      softWrap: true,
+                                      maxLines: null,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                        fontFamily:
+                                            'Saira', // Ensure only 'Saira' font is used
+                                        color: message['isSender']
+                                            ? Colors
+                                                .white // Set sender message text color
+                                            : Color(
+                                                0xFFFF9F07), // Set receiver message text color
+                                        height: 1.7, // Set proper text height
+                                      ),
                                     ),
-                                  ),
                                 ]),
                           ),
                         ),
@@ -255,7 +324,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                     color: Color(0xFFFF9F07),
                     size: 25,
                   ),
-                  onTap: () {},
+                  onTap: () => _pickImage(ImageSource.gallery),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 8, right: 8),
@@ -265,7 +334,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                       color: Color(0xFFE6AC11),
                       size: 25,
                     ),
-                    onTap: () {},
+                    onTap: () => _pickImage(ImageSource.camera),
                   ),
                 ),
               ],
