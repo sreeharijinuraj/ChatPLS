@@ -38,6 +38,7 @@ dependencies:
   permission_handler: ^11.3.1
   shared_preferences: ^2.5.1
   supabase_flutter: ^2.8.3
+  uuid: ^4.5.1
 
 dev_dependencies:
   chat_bubbles: ^1.6.0
@@ -61,8 +62,6 @@ flutter:
   assets:
     - assets/images/CHATPLSLOGO2.png
     - assets/images/ChatPLS_logo_updated.png
-
-
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

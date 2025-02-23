@@ -34,7 +34,7 @@ class _MainNavigationScreenForStaffsState
     final List<Widget> _pages = [
       HomeScreenAl(
           staffName: widget.staffName), // Correct usage of widget.staffName
-      AiChatScreen(),
+      AiChatScreen(staffName: widget.staffName),
       StaffProfileDashboardForstaffonly(
         staffName: widget.staffName,
       ),

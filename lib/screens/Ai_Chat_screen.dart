@@ -6,9 +6,13 @@ import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 class AiChatScreen extends StatefulWidget {
-  const AiChatScreen({super.key});
+  final String staffName;
+
+  const AiChatScreen({super.key, required this.staffName});
 
   @override
   State<AiChatScreen> createState() => _AiChatScreenState();
@@ -16,7 +20,67 @@ class AiChatScreen extends StatefulWidget {
 
 class _AiChatScreenState extends State<AiChatScreen> {
   List<Map<String, dynamic>> chatMessages = [];
+  List<Map<String, dynamic>> chatList = [];
   bool isLoading = false;
+  final SupabaseClient supabase = Supabase.instance.client;
+  String chatId = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChatList();
+    _loadChats();
+  }
+
+  Future<void> _loadChatList() async {
+    final response = await supabase
+        .from('chats')
+        .select('chat_id, staff_name')
+        .eq('staff_name', widget.staffName)
+        .order('timestamp', ascending: false);
+
+    setState(() {
+      chatList = response
+          .map((chat) =>
+              {'chat_id': chat['chat_id'], 'staff_name': chat['staff_name']})
+          .toList();
+    });
+  }
+
+  Future<void> _loadChats() async {
+    final response = await supabase
+        .from('chats')
+        .select()
+        .eq('staff_name', widget.staffName)
+        .order('timestamp', ascending: true);
+
+    setState(() {
+      chatMessages = response
+          .map((chat) => {
+                'isSender': chat['is_sender'],
+                'text': chat['message'],
+                'chat_id': chat['chat_id']
+              })
+          .toList();
+      if (chatMessages.isNotEmpty) {
+        chatId = chatMessages.first['chat_id'];
+      }
+    });
+  }
+
+  Future<void> _saveChat(String message, bool isSender) async {
+    if (chatId.isEmpty) {
+      chatId = const Uuid().v4();
+    }
+
+    await supabase.from('chats').insert({
+      'staff_name': widget.staffName,
+      'chat_id': chatId,
+      'message': message,
+      'is_sender': isSender,
+    });
+  }
+
   void _simulateTyping(String fullText) async {
     setState(() {
       chatMessages.add({'isSender': false, 'text': ''});
@@ -24,20 +88,26 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
     int index = chatMessages.length - 1;
     for (int i = 0; i < fullText.length; i++) {
-      await Future.delayed(const Duration(milliseconds: 30)); // Speed of typing
+      await Future.delayed(const Duration(milliseconds: 30));
       setState(() {
         chatMessages[index]['text'] += fullText[i];
       });
     }
+
+    // Save only once at the end
+    await _saveChat(fullText, false);
   }
 
   Future<void> sendQuery(String query) async {
+    setState(() {
+      isLoading = true;
+      chatMessages.add({'isSender': true, 'text': query}); // Add once here
+    });
+
+    await _saveChat(query, true); // Save to DB
+
     final url = Uri.parse('http://192.168.0.112:5000/search');
     try {
-      setState(() {
-        isLoading = true;
-      });
-
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -46,12 +116,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
-        print("API Response: $data"); // Debugging
-
-        // Check if the 'response' field exists and is valid
         if (data.containsKey('response') && data['response'] is String) {
-          _simulateTyping(data['response']); // Display AI response
+          _simulateTyping(data['response']); // Typing effect for response
         } else {
           _simulateTyping("No relevant response received.");
         }
@@ -60,7 +126,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
             "Error from server. Status Code: ${response.statusCode}");
       }
     } catch (e) {
-      print('Error: $e');
       _simulateTyping(
           "Failed to fetch response due to network or server issues.");
     } finally {
@@ -190,15 +255,21 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 ],
               ),
             ),
-            const ListTile(
-              title: Text(
-                'Chat - 1',
-                style: TextStyle(
-                  color: Color(0xFFF9ECC8),
-                  fontSize: 18,
-                ),
-              ),
-            ),
+            ...chatList.map((chat) => ListTile(
+                  title: Text(
+                    chat['staff_name'],
+                    style: const TextStyle(
+                      color: Color(0xFFF9ECC8),
+                      fontSize: 18,
+                    ),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      chatId = chat['chat_id'];
+                    });
+                    _loadChats();
+                  },
+                )),
           ],
         ),
       ),

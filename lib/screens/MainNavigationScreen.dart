@@ -28,7 +28,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _pages = [
       HomeScreenAl(staffName: widget.staffName),
       UploadbrochuresScreen(staffName: widget.staffName),
-      AiChatScreen(),
+      AiChatScreen(staffName: widget.staffName),
       StaffProfileDashboardScreen(staffName: widget.staffName),
     ];
     _loadAiChatIcon();
