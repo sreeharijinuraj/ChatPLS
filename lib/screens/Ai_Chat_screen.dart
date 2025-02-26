@@ -24,35 +24,63 @@ class _AiChatScreenState extends State<AiChatScreen> {
   bool isLoading = false;
   final SupabaseClient supabase = Supabase.instance.client;
   String chatId = "";
-
+  double fabX = 300;
+  double fabY = 600;
   @override
   void initState() {
     super.initState();
-    _loadChatList();
-    _loadChats();
+    _loadChatList().then((_) {
+      if (chatList.isNotEmpty) {
+        chatId = chatList.first['chat_id']; // Set first chat as default
+        _loadChats(chatId);
+      }
+    });
   }
 
   Future<void> _loadChatList() async {
     final response = await supabase
         .from('chats')
-        .select('chat_id, staff_name')
+        .select('chat_id, staff_name, created_at')
         .eq('staff_name', widget.staffName)
-        .order('timestamp', ascending: false);
+        .order('created_at', ascending: false);
+
+    print("Chat list response: $response"); // Debug log
+
+    final Set<String> uniqueChatIds = {};
+    List<Map<String, dynamic>> uniqueChats = [];
+
+    for (var chat in response) {
+      if (!uniqueChatIds.contains(chat['chat_id'])) {
+        uniqueChatIds.add(chat['chat_id']);
+        uniqueChats.add(chat);
+      }
+    }
 
     setState(() {
-      chatList = response
-          .map((chat) =>
-              {'chat_id': chat['chat_id'], 'staff_name': chat['staff_name']})
-          .toList();
+      chatList = uniqueChats;
     });
+
+    print("Loaded ${chatList.length} chats for staff: ${widget.staffName}");
+
+    // Automatically load first chat
+    if (chatList.isNotEmpty) {
+      setState(() {
+        chatId = chatList.first['chat_id'];
+      });
+      _loadChats(chatId);
+    }
   }
 
-  Future<void> _loadChats() async {
+  Future<void> _loadChats(String chatId) async {
+    print("Loading messages for chat ID: $chatId"); // Debug log
+
     final response = await supabase
         .from('chats')
         .select()
-        .eq('staff_name', widget.staffName)
-        .order('timestamp', ascending: true);
+        .eq('chat_id', chatId)
+        .order('created_at', ascending: true);
+
+    print("Chat messages response: $response"); // Debug log
 
     setState(() {
       chatMessages = response
@@ -62,10 +90,25 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 'chat_id': chat['chat_id']
               })
           .toList();
-      if (chatMessages.isNotEmpty) {
-        chatId = chatMessages.first['chat_id'];
-      }
     });
+
+    print("Loaded ${chatMessages.length} messages");
+  }
+
+  Future<void> _startNewChat() async {
+    String newChatId = const Uuid().v4();
+    await supabase.from('chats').insert({
+      'staff_name': widget.staffName,
+      'chat_id': newChatId,
+      'message': 'Starting A New Chat',
+      'is_sender': true,
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+    setState(() {
+      chatId = newChatId;
+      chatMessages = [];
+    });
+    await _loadChatList();
   }
 
   Future<void> _saveChat(String message, bool isSender) async {
@@ -78,6 +121,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
       'chat_id': chatId,
       'message': message,
       'is_sender': isSender,
+      'created_at':
+          DateTime.now().toUtc().toIso8601String(), // Ensure timestamp is added
     });
   }
 
@@ -96,6 +141,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
     // Save only once at the end
     await _saveChat(fullText, false);
+  }
+
+  Future<void> _deleteChat(String chatId) async {
+    await supabase.from('chats').delete().eq('chat_id', chatId);
+    await _loadChatList(); // Refresh chat list after deletion
   }
 
   Future<void> sendQuery(String query) async {
@@ -212,31 +262,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
               ),
               child: Column(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF9ECC8),
-                      borderRadius: BorderRadius.circular(30),
-                      border:
-                          Border.all(color: const Color(0xFFFF9F07), width: 2),
-                    ),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        hintStyle: TextStyle(
-                            fontStyle: FontStyle.italic,
-                            color: Colors.black,
-                            fontSize: 13,
-                            fontFamily: 'Saira',
-                            fontWeight: FontWeight.w100,
-                            height: 4.10),
-                        hintText: "Search",
-                        border: InputBorder.none,
-                        prefixIcon:
-                            Icon(Icons.search, color: Color(0xFFFF9F07)),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                      onChanged: (value) {},
-                    ),
-                  ),
                   Row(
                     children: [
                       Image.asset(
@@ -251,25 +276,55 @@ class _AiChatScreenState extends State<AiChatScreen> {
                               .titleLarge
                               ?.copyWith(color: const Color(0xFFF9ECC8))),
                     ],
-                  ),
+                  )
                 ],
               ),
             ),
-            ...chatList.map((chat) => ListTile(
-                  title: Text(
-                    chat['staff_name'],
-                    style: const TextStyle(
-                      color: Color(0xFFF9ECC8),
-                      fontSize: 18,
-                    ),
-                  ),
-                  onTap: () {
+            ListTile(
+              leading:
+                  const Icon(Icons.library_add, color: const Color(0xFFF9ECC8)),
+              title: Text(
+                "New Chat",
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge!
+                    .copyWith(color: const Color(0xFFF9ECC8)),
+              ),
+              onTap: () async {
+                await _startNewChat();
+                Navigator.pop(context); // Close drawer after creating chat
+              },
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            ...chatList.map(
+              (chat) => ListTile(
+                leading: IconButton(
+                  icon: const Icon(Icons.visibility, color: Color(0xFFF9ECC8)),
+                  onPressed: () {
                     setState(() {
                       chatId = chat['chat_id'];
                     });
-                    _loadChats();
+                    _loadChats(chat['chat_id']);
                   },
-                )),
+                ),
+                title: Text(
+                  "Chat ID: ${chat['chat_id'].substring(0, 8)}...",
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge!
+                      .copyWith(color: const Color(0xFFF9ECC8), fontSize: 18),
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded,
+                      color: Colors.red),
+                  onPressed: () async {
+                    await _deleteChat(chat['chat_id']);
+                  },
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -383,9 +438,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
               ),
               messageBarColor: const Color(0xFFF9ECC8),
               onSend: (message) async {
-                setState(() {
-                  chatMessages.add({'isSender': true, 'text': message});
-                });
                 await sendQuery(message);
               },
               actions: [
