@@ -1,8 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AppbarOfChatScreen extends StatelessWidget
-    implements PreferredSizeWidget {
+class AppbarOfChatScreen extends StatefulWidget implements PreferredSizeWidget {
   const AppbarOfChatScreen({super.key});
+
+  @override
+  State<AppbarOfChatScreen> createState() => _AppbarOfChatScreenState();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class _AppbarOfChatScreenState extends State<AppbarOfChatScreen> {
+  String staffName = "Loading...";
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStaffName();
+  }
+
+  Future<void> _fetchStaffName() async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+
+    if (user != null) {
+      debugPrint("User ID: ${user.id}"); // Debugging: Print user ID
+
+      final response = await supabase
+          .from('staffs')
+          .select('name')
+          .eq('staff_id', user.id)
+          .maybeSingle();
+
+      debugPrint("Supabase Response: $response"); // Debugging: Print response
+
+      if (response != null && response['name'] != null) {
+        setState(() {
+          staffName = response['name'];
+        });
+      } else {
+        setState(() {
+          staffName = "Unknown";
+        });
+      }
+    } else {
+      setState(() {
+        staffName = "Guest";
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,9 +101,10 @@ class AppbarOfChatScreen extends StatelessWidget
       actions: [
         IconButton(
           onPressed: () {
-            // Add functionality for + icon
+            _showReportDialog(context);
           },
-          icon: const Icon(Icons.add, color: Color(0xFFFF9F07)),
+          icon: const Icon(Icons.report_gmailerrorred_rounded,
+              color: Color(0xFFFF9F07)),
         ),
         PopupMenuButton(
           icon: const Icon(Icons.more_vert, color: Color(0xFFFF9F07)),
@@ -89,6 +137,70 @@ class AppbarOfChatScreen extends StatelessWidget
     );
   }
 
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  void _showReportDialog(BuildContext context) {
+    final TextEditingController reportController = TextEditingController();
+    final supabase = Supabase.instance.client;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFF9ECC8),
+          title: Text(
+            "Report an Issue",
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge!
+                .copyWith(color: const Color(0xFFFF9F07)),
+          ),
+          content: TextField(
+            controller: reportController,
+            maxLines: 5,
+            decoration: const InputDecoration(
+              hintStyle: TextStyle(
+                  fontFamily: 'Saira',
+                  fontStyle: FontStyle.italic,
+                  fontSize: 14),
+              hintText: "Describe your issue regarding the chat...",
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                String reportText = reportController.text.trim();
+
+                if (reportText.isNotEmpty) {
+                  try {
+                    await supabase.from('chat_reports').insert({
+                      'staff_name': staffName, // Use fetched staff name
+                      'report_text': reportText,
+                      'reported_at': DateTime.now().toIso8601String(),
+                    });
+
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text("Report added successfully.")),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Error: $e")),
+                    );
+                  }
+                }
+              },
+              child: const Text("Send"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
