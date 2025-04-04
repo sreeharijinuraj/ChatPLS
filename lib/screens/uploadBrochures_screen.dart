@@ -28,7 +28,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
   Future<bool> checkFileExists(String fileName) async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.112:5000/check_file?file_name=$fileName'),
+        Uri.parse('http://192.168.0.100:5000/check_file?file_name=$fileName'),
       );
 
       if (response.statusCode == 200) {
@@ -46,7 +46,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
   Future<void> loadUploadedFiles() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.112:5000/get_uploaded_files'),
+        Uri.parse('http://192.168.0.100:5000/get_uploaded_files'),
       );
 
       if (response.statusCode == 200) {
@@ -86,7 +86,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
   Future<void> loadUploadedImages() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.112:5000/get_uploaded_images'),
+        Uri.parse('http://192.168.0.100:5000/get_uploaded_images'),
       );
 
       if (response.statusCode == 200) {
@@ -99,7 +99,7 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
               "name": item["name"]?.toString() ?? "No Name",
               "type": "image", // Explicitly mark as image
               "url":
-                  "http://192.168.0.112:5000/get_uploaded_images/${item["name"]}",
+                  "http://192.168.0.100:5000/get_uploaded_images/${item["name"]}",
             };
           }).toList();
 
@@ -175,11 +175,11 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
           // Determine API endpoint based on file type
           String endpoint;
           if (['jpg', 'jpeg', 'png'].contains(file.extension!.toLowerCase())) {
-            endpoint = 'http://192.168.0.112:5000/upload_image';
+            endpoint = 'http://192.168.0.100:5000/upload_image';
           } else if (file.extension!.toLowerCase() == 'csv') {
-            endpoint = 'http://192.168.0.112:5000/upload_csv';
+            endpoint = 'http://192.168.0.100:5000/upload_csv';
           } else {
-            endpoint = 'http://192.168.0.112:5000/upload';
+            endpoint = 'http://192.168.0.100:5000/upload';
           }
 
           var request = http.MultipartRequest('POST', Uri.parse(endpoint));
@@ -285,8 +285,8 @@ class _UploadbrochuresScreenState extends State<UploadbrochuresScreen> {
                       fileName.toLowerCase().endsWith('.png');
 
                   String endpoint = isImage
-                      ? 'http://192.168.0.112:5000/delete_image_file'
-                      : 'http://192.168.0.112:5000/delete_file';
+                      ? 'http://192.168.0.100:5000/delete_image_file'
+                      : 'http://192.168.0.100:5000/delete_file';
 
                   final response = await http.delete(
                     Uri.parse(endpoint),

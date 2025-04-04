@@ -18,6 +18,40 @@ class AiChatScreen extends StatefulWidget {
   State<AiChatScreen> createState() => _AiChatScreenState();
 }
 
+class FadeIconButton extends StatefulWidget {
+  final Icon icon;
+  final VoidCallback onTap;
+
+  const FadeIconButton({super.key, required this.icon, required this.onTap});
+
+  @override
+  State<FadeIconButton> createState() => _FadeIconButtonState();
+}
+
+//buttonfadeeffect
+class _FadeIconButtonState extends State<FadeIconButton> {
+  double _opacity = 1.0;
+
+  void _handleTap() async {
+    setState(() => _opacity = 0.5); // Fade out
+    await Future.delayed(const Duration(milliseconds: 150));
+    setState(() => _opacity = 1.0); // Fade back in
+    widget.onTap(); // Trigger the original onTap
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 150),
+        opacity: _opacity,
+        child: widget.icon,
+      ),
+    );
+  }
+}
+
 class _AiChatScreenState extends State<AiChatScreen> {
   List<Map<String, dynamic>> chatMessages = [];
   List<Map<String, dynamic>> chatList = [];
@@ -151,12 +185,15 @@ class _AiChatScreenState extends State<AiChatScreen> {
   Future<void> sendQuery(String query) async {
     setState(() {
       isLoading = true;
-      chatMessages.add({'isSender': true, 'text': query}); // Add once here
+      chatMessages.add({'isSender': true, 'text': query});
     });
 
-    await _saveChat(query, true); // Save to DB
+    await _saveChat(query, true);
 
-    final url = Uri.parse('http://192.168.0.112:5000/search');
+    final url = Uri.parse(isWebSearchEnabled
+        ? 'http://192.168.0.100:5000/web_search_chat'
+        : 'http://192.168.0.100:5000/search');
+
     try {
       final response = await http.post(
         url,
@@ -166,8 +203,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data.containsKey('response') && data['response'] is String) {
-          _simulateTyping(data['response']); // Typing effect for response
+        print('Server response: $data');
+
+        // This is the key change - properly extract the response from either endpoint
+        if (data.containsKey('response')) {
+          _simulateTyping(data['response']);
         } else {
           _simulateTyping("No relevant response received.");
         }
@@ -177,7 +217,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
       }
     } catch (e) {
       _simulateTyping(
-          "Failed to fetch response due to network or server issues.");
+          "Failed to fetch response due to network or server issues: ${e.toString()}");
     } finally {
       setState(() {
         isLoading = false;
@@ -215,7 +255,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
   }
 
   Future<void> _sendImage(File imageFile) async {
-    final url = Uri.parse('http://192.168.0.112:5000/search_image');
+    final url = Uri.parse('http://192.168.0.100:5000/search_image');
 
     try {
       setState(() {
@@ -228,10 +268,19 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
       final response = await request.send();
       final responseData = await response.stream.bytesToString();
+      print("Full Response Data: $responseData");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(responseData);
-        _simulateTyping(data['response'] ?? "No relevant results found.");
+        print("Parsed JSON: $data");
+
+        if (data.containsKey("matches") && data["matches"].isNotEmpty) {
+          final metadata = data["matches"][0]["exif_metadata"];
+          _simulateTyping(
+              metadata != null ? metadata.toString() : "No metadata found.");
+        } else {
+          _simulateTyping("No relevant results found.");
+        }
       } else {
         _simulateTyping(
             "Error from server. Status Code: ${response.statusCode}");
@@ -244,6 +293,42 @@ class _AiChatScreenState extends State<AiChatScreen> {
         isLoading = false;
       });
     }
+  }
+
+  //websearch function
+  bool isWebSearchEnabled = false;
+
+  void toggleWebSearch(BuildContext context) async {
+    setState(() {
+      isWebSearchEnabled = !isWebSearchEnabled;
+    });
+
+    final message =
+        isWebSearchEnabled ? 'Web Search is Now Enabled' : 'Web Search is Off';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.blue,
+        content: Text(
+          message,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
+        ),
+        action: SnackBarAction(
+          label: 'OK',
+          onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+        ),
+      ),
+    );
+
+    // Send the toggle status to Flask
+    await http.post(
+      Uri.parse('http://192.168.0.100:5000/toggle_web_search'),
+      body: {'enabled': isWebSearchEnabled.toString()},
+    );
   }
 
   @override
@@ -441,23 +526,29 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 await sendQuery(message);
               },
               actions: [
-                InkWell(
-                  child: const Icon(
-                    Icons.attach_file,
-                    color: Color(0xFFFF9F07),
-                    size: 25,
-                  ),
+                FadeIconButton(
+                  icon: const Icon(Icons.attach_file,
+                      color: Color(0xFFFF9F07), size: 25),
                   onTap: () => _pickImage(ImageSource.gallery),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 8, right: 8),
-                  child: InkWell(
-                    child: const Icon(
-                      Icons.photo_camera,
-                      color: Color(0xFFE6AC11),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: FadeIconButton(
+                    icon: const Icon(Icons.photo_camera,
+                        color: Color(0xFFE6AC11), size: 25),
+                    onTap: () => _pickImage(ImageSource.camera),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: FadeIconButton(
+                    icon: Icon(
+                      Icons.language_sharp,
+                      color:
+                          isWebSearchEnabled ? Colors.green : Colors.blueAccent,
                       size: 25,
                     ),
-                    onTap: () => _pickImage(ImageSource.camera),
+                    onTap: () => toggleWebSearch(context),
                   ),
                 ),
               ],

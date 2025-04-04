@@ -1,0 +1,2 @@
+D:/Main Project College/new_app/ChatPLS/android/app/.cxx/Debug/6o1s2j4f/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/Main Project College/new_app/ChatPLS/android/app/.cxx/Debug/6o1s2j4f/armeabi-v7a/CMakeFiles/rebuild_cache.dir

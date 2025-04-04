@@ -161,7 +161,8 @@ class _AppbarOfChatScreenState extends State<AppbarOfChatScreen> {
                   fontFamily: 'Saira',
                   fontStyle: FontStyle.italic,
                   fontSize: 14),
-              hintText: "Describe your issue regarding the chat...",
+              hintText:
+                  "Describe your issue regarding the chat or the trained data ...",
               border: OutlineInputBorder(),
             ),
           ),
