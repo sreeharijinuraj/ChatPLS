@@ -53,6 +53,58 @@ class _FadeIconButtonState extends State<FadeIconButton> {
 }
 
 class _AiChatScreenState extends State<AiChatScreen> {
+  List<TextSpan> _formatMessage(String text) {
+    final boldWords = [
+      'important',
+      'note',
+      'warning',
+      'recommended',
+      'solution'
+    ];
+    final keywords = [
+      'watts',
+      'lumens',
+      'voltage',
+      'cutout',
+      'diameter',
+      'beam angle',
+      'power',
+      'category',
+      'cct(k)',
+      'color temperature',
+      'luminous flux',
+      'height',
+      'holder type',
+      'size',
+      'material',
+      'finish',
+      'price',
+      'powered by',
+      'D.P',
+    ];
+
+    List<TextSpan> spans = [];
+    final words = text.split(' ');
+
+    for (var word in words) {
+      TextStyle style = const TextStyle();
+
+      if (boldWords.any((w) => word.toLowerCase().contains(w))) {
+        style = const TextStyle(
+            fontWeight: FontWeight.bold, color: Colors.redAccent);
+      } else if (keywords.any((k) => word.toLowerCase().contains(k))) {
+        style = const TextStyle(
+            color: Colors.blueAccent,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Saira');
+      }
+
+      spans.add(TextSpan(text: '$word ', style: style));
+    }
+
+    return spans;
+  }
+
   List<Map<String, dynamic>> chatMessages = [];
   List<Map<String, dynamic>> chatList = [];
   bool isLoading = false;
@@ -191,8 +243,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
     await _saveChat(query, true);
 
     final url = Uri.parse(isWebSearchEnabled
-        ? 'http://192.168.0.100:5000/web_search_chat'
-        : 'http://192.168.0.100:5000/search');
+        ? 'http://192.168.0.107:5000/web_search_chat'
+        : 'http://192.168.0.107:5000/search');
 
     try {
       final response = await http.post(
@@ -255,7 +307,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
   }
 
   Future<void> _sendImage(File imageFile) async {
-    final url = Uri.parse('http://192.168.0.100:5000/search_image');
+    final url = Uri.parse('http://192.168.0.107:5000/search_image');
 
     try {
       setState(() {
@@ -326,7 +378,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
     // Send the toggle status to Flask
     await http.post(
-      Uri.parse('http://192.168.0.100:5000/toggle_web_search'),
+      Uri.parse('http://192.168.0.107:5000/toggle_web_search'),
       body: {'enabled': isWebSearchEnabled.toString()},
     );
   }
@@ -471,23 +523,20 @@ class _AiChatScreenState extends State<AiChatScreen> {
                                     Image.file(
                                         message['image']) // Display the image
                                   else
-                                    Text(
-                                      message['text'].replaceAll("\n\n",
-                                          ""), // Remove unnecessary newlines
+                                    RichText(
                                       textAlign: TextAlign.start,
-                                      softWrap: true,
-                                      maxLines: null,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                        fontFamily:
-                                            'Saira', // Ensure only 'Saira' font is used
-                                        color: message['isSender']
-                                            ? Colors
-                                                .white // Set sender message text color
-                                            : Color(
-                                                0xFFFF9F07), // Set receiver message text color
-                                        height: 1.7, // Set proper text height
+                                      text: TextSpan(
+                                        style: TextStyle(
+                                          fontFamily: 'Saira',
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.7,
+                                          color: message['isSender']
+                                              ? Colors.white
+                                              : const Color(0xFFFF9F07),
+                                        ),
+                                        children:
+                                            _formatMessage(message['text']),
                                       ),
                                     ),
                                 ]),

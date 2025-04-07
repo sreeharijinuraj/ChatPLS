@@ -208,54 +208,44 @@ class HomeScreenAl extends StatelessWidget {
           ),
           // Recent Searches Section
           Positioned(
-            top: 480, // Adjust as per your layout
-            left: 0,
+            top: 470,
+            left: 15,
             right: 0,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Recent Searches",
+                  "Why ChatPLS ?",
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: const Color(0xFFFF9F07),
                       fontWeight: FontWeight.bold,
                       fontSize: 20),
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  height: 150, // Adjust height as needed
-                  child: ListView.builder(
-                    scrollDirection: Axis.vertical,
-                    itemCount: 5, // Sample data count
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 10),
-                        tileColor: const Color(0xFFE6AC11),
-                        leading: const Icon(Icons.history, color: Colors.white),
-                        title: Text(
-                          "Sample Search $index",
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge
-                              ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 16),
-                        ),
-                        subtitle: Text(
-                          "Details about search $index",
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: Colors.white70, fontSize: 12),
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios,
-                            color: Colors.white, size: 16),
-                      );
-                    },
-                  ),
+                const SizedBox(height: 18),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Icon(Icons.schedule_outlined,
+                        color: Color(0xFFFF9F07), size: 45),
+                    Icon(Icons.image_search_outlined,
+                        color: Color(0xFFE6AC11), size: 45),
+                    Icon(Icons.diversity_1_outlined,
+                        color: Color(0xFFFF9F07), size: 45),
+                  ],
                 ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Text(
+                      "Saves Your \nTime",
+                      textAlign: TextAlign.center,
+                    ),
+                    Text("Accurate Product \nSearch",
+                        textAlign: TextAlign.center),
+                    Text("Good Customer \nInteraction",
+                        textAlign: TextAlign.center),
+                  ],
+                )
               ],
             ),
           ),
